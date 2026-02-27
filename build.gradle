@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.shake-art'
 version = '0.0.1-SNAPSHOT'
-description = 'Backoffice du festival Shake Art (gestion artistes, partenaires, analyse)'
+description = 'Backoffice du festival Shake Art (gestion artistes, partenaires, analyses)'
 
 java {
 	toolchain {
