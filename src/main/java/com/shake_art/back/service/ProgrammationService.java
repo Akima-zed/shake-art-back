@@ -4,7 +4,6 @@ import com.shake_art.back.dto.ActiviteDto;
 import com.shake_art.back.dto.ProgrammationDto;
 import com.shake_art.back.model.ActiviteModel;
 import com.shake_art.back.model.ProgrammationModel;
-import com.shake_art.back.repository.EquipeMemberRepository;
 import com.shake_art.back.repository.ProgrammationRepository;
 
 import jakarta.transaction.Transactional;

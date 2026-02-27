@@ -1,7 +1,6 @@
 package com.shake_art.back.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.shake_art.back.model.CardPresentation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;

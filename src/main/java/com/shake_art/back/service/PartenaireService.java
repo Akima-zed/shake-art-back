@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.shake_art.back.model.PartenaireContent;
 import com.shake_art.back.repository.PartenaireContentRepository;
 import com.shake_art.back.repository.PartenaireRepository;
-import com.shake_art.back.partenaire.Partenaire;
+import com.shake_art.back.model.Partenaire;
 
 import java.io.IOException;
 import java.nio.file.*;

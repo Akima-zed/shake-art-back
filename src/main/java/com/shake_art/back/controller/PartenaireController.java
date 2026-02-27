@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.shake_art.back.partenaire.Partenaire;
+import com.shake_art.back.model.Partenaire;
 import com.shake_art.back.model.PartenaireContent;
 import com.shake_art.back.service.PartenaireService;
 

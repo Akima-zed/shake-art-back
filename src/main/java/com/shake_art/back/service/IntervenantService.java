@@ -1,8 +1,6 @@
 package com.shake_art.back.service;
 
 import com.shake_art.back.dto.IntervenantDto;
-import com.shake_art.back.model.ArtisteModel;
-import com.shake_art.back.model.EquipeModel;
 import com.shake_art.back.repository.ArtisteRepository;
 import com.shake_art.back.repository.EquipeMemberRepository;
 

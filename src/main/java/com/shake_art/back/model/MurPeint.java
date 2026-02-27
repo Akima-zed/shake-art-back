@@ -1,6 +1,5 @@
 package com.shake_art.back.model;
 
-import com.shake_art.back.model.ArtisteModel;
 import jakarta.persistence.*;
 
 @Entity

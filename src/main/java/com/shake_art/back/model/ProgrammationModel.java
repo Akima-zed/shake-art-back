@@ -3,7 +3,6 @@ package com.shake_art.back.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
-import lombok.Lombok;
 import lombok.Getter;
 import lombok.Setter;
 
