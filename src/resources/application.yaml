@@ -1,16 +1,16 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: password
-  h2:
-    console:
-      enabled: true
+    url: jdbc:mysql://localhost:3306/shake_art
+    username: shake_user
+    password: shake_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   mail:
     host: smtp.gmail.com
     port: 587
@@ -22,4 +22,3 @@ spring:
           auth: true
           starttls:
             enable: true
-    default-encoding: UTF-8
