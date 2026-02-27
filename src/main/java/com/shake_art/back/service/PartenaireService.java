@@ -48,10 +48,12 @@ public class PartenaireService {
     }
 
     public Optional<Partenaire> getOne(Long id) {
+        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         return partenaireRepository.findById(id);
     }
 
     public Partenaire update(Long id, String nom, String description, String siteWeb, MultipartFile logoFile) throws IOException {
+        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         Partenaire p = partenaireRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
 
         p.setNom(nom);

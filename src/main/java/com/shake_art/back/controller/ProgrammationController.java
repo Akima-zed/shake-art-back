@@ -11,9 +11,12 @@ import com.shake_art.back.model.ProgrammationModel;
 import com.shake_art.back.repository.ActiviteRepository;
 import com.shake_art.back.repository.ProgrammationRepository;
 import com.shake_art.back.service.ProgrammationService;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
 
 /**
  * Contrôleur REST pour gérer la programmation avec conversion DTO <-> Model.
@@ -45,7 +48,7 @@ public class ProgrammationController {
 
     /** Retourne une programmation par son ID. */
     @GetMapping("/{id}")
-    public ResponseEntity<ProgrammationDto> getById(@PathVariable Long id) {
+    public ResponseEntity<ProgrammationDto> getById(@PathVariable @NonNull Long id) {
         ProgrammationModel prog = service.getById(id);
         if (prog == null) {
             return ResponseEntity.notFound().build();
@@ -63,7 +66,7 @@ public class ProgrammationController {
 
     /** Retourne les programmations d'une année donnée. */
     @GetMapping("/annee/{annee}")
-    public List<ProgrammationModel> getByAnnee(@PathVariable Integer annee) {
+    public List<ProgrammationModel> getByAnnee(@PathVariable @NonNull Integer annee) {
         return service.getByAnnee(annee);
     }
 
@@ -79,7 +82,8 @@ public class ProgrammationController {
     /** Mise à jour d'une programmation existante depuis un DTO JSON. */
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Transactional
-    public ResponseEntity<ProgrammationModel> update(@PathVariable Long id, @RequestBody ProgrammationDto dto) {
+    public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id, @RequestBody ProgrammationDto dto) {
+        Objects.requireNonNull(id, "ID cannot be null");
         ProgrammationModel existing = service.getById(id);
         existing.setDate(dto.getDate());
         existing.setAnnee(dto.getAnnee());
@@ -97,7 +101,7 @@ public class ProgrammationController {
 
     @DeleteMapping("/{programmationId}/activites/{activiteId}")
     @Transactional
-    public ResponseEntity<Void> deleteActivite(@PathVariable Long programmationId, @PathVariable Long activiteId) {
+    public ResponseEntity<Void> deleteActivite(@PathVariable @NonNull Long programmationId, @PathVariable @NonNull Long activiteId) {
         ProgrammationModel prog = programmationRepository.findById(programmationId)
                 .orElseThrow(() -> new RuntimeException("Programmation introuvable avec l'id " + programmationId));
 
@@ -129,7 +133,8 @@ public class ProgrammationController {
 
     /** Mise à jour d'une activité indépendante. */
     @PutMapping("/activites/{id}")
-    public ActiviteModel updateActivite(@PathVariable Long id, @RequestBody ActiviteDto dto) {
+    public ActiviteModel updateActivite(@PathVariable @NonNull Long id, @RequestBody ActiviteDto dto) {
+        Objects.requireNonNull(id, "ID cannot be null");
         ActiviteModel activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id : " + id));
 

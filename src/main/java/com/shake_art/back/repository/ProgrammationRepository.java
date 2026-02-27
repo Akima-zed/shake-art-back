@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull; // Added import for @NonNull annotation
 
 import com.shake_art.back.model.ProgrammationModel;
 
@@ -18,6 +19,7 @@ public interface ProgrammationRepository extends JpaRepository<ProgrammationMode
             "activites.artiste",
             "activites.equipe"
     })
+    @NonNull
     List<ProgrammationModel> findAll();
 
     @EntityGraph(attributePaths = {

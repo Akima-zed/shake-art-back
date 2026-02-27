@@ -29,7 +29,7 @@ public class ArtisteDto {
     }
 
     public String getNom() {
-        return name;
+        return nom;
     }
 
     public String getPrenom() {

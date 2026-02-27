@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.Objects;
 
 /**
  * Contrôleur REST pour gérer le contenu de la page d'accueil,
@@ -117,6 +118,8 @@ public class AccueilContentController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) {
+        Objects.requireNonNull(id, "ID cannot be null");
+
         try {
             // Vérifie que le fichier n'est pas vide
             if (file.isEmpty()) {

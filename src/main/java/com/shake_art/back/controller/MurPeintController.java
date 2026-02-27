@@ -11,12 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Objects;
 
 import com.shake_art.back.model.ArtisteModel;
 
@@ -45,7 +47,7 @@ public class MurPeintController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MurPeintDto> getMurPeint(@PathVariable Long id) {
+    public ResponseEntity<MurPeintDto> getMurPeint(@PathVariable @NonNull Long id) {
         Optional<MurPeint> mur = murPeintRepository.findByIdWithArtiste(id);
         return mur.map(value -> ResponseEntity.ok(toDto(value)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -55,6 +57,7 @@ public class MurPeintController {
     @PostMapping
     public ResponseEntity<MurPeintDto> create(@RequestBody MurPeint mur) {
         if (mur.getArtiste() != null && mur.getArtiste().getId() != null) {
+            Objects.requireNonNull(mur.getArtiste().getId(), "L'identifiant de l'artiste ne peut pas être nul");
             Optional<ArtisteModel> artiste = artisteRepository.findById(mur.getArtiste().getId());
             artiste.ifPresent(mur::setArtiste);
         } else {
@@ -67,7 +70,8 @@ public class MurPeintController {
 
     // 📌 PUT: Mise à jour d’un mur peint
     @PutMapping("/{id}")
-    public ResponseEntity<MurPeintDto> update(@PathVariable Long id, @RequestBody MurPeint murDetails) {
+    public ResponseEntity<MurPeintDto> update(@PathVariable @NonNull Long id, @RequestBody MurPeint murDetails) {
+        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         return murPeintRepository.findById(id).map(mur -> {
             mur.setNom(murDetails.getNom());
             mur.setLatitude(murDetails.getLatitude());
@@ -77,6 +81,7 @@ public class MurPeintController {
             mur.setAnnee(murDetails.getAnnee());
 
             if (murDetails.getArtiste() != null && murDetails.getArtiste().getId() != null) {
+                Objects.requireNonNull(murDetails.getArtiste().getId(), "L'identifiant de l'artiste ne peut pas être nul");
                 Optional<ArtisteModel> artiste = artisteRepository.findById(murDetails.getArtiste().getId());
                 artiste.ifPresent(mur::setArtiste);
             } else {
@@ -91,7 +96,8 @@ public class MurPeintController {
 
     // 📌 DELETE: Suppression d’un mur peint
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         if (!murPeintRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -108,6 +114,7 @@ public class MurPeintController {
     // 📌 POST: Upload manuel d’une photo de fresque
     @PostMapping("/upload-photo")
     public ResponseEntity<UploadResponse> uploadPhoto(@RequestParam("file") MultipartFile file) {
+        Objects.requireNonNull(file, "File cannot be null");
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -118,7 +125,7 @@ public class MurPeintController {
                 Files.createDirectories(uploadPath);
             }
 
-            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+            String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename(), "Original filename cannot be null"));
             String ext = "";
             int dotIndex = originalFilename.lastIndexOf('.');
             if (dotIndex >= 0) {
@@ -138,7 +145,8 @@ public class MurPeintController {
 
     // ✅ ✅ ✅ POST: Copier une photo depuis la galerie vers le dossier des fresques
     @PostMapping("/{id}/valider-photo")
-    public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable Long id, @RequestBody String nomFichier) {
+    public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable @NonNull Long id, @RequestBody String nomFichier) {
+        Objects.requireNonNull(id, "ID cannot be null");
         try {
             nomFichier = nomFichier.replace("\"", ""); // Supprimer les guillemets éventuels
 

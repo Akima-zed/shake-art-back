@@ -15,6 +15,7 @@ import com.shake_art.back.repository.PhotoRepository;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.Objects;
 
 @Service
 public class ArtisteService {
@@ -25,7 +26,6 @@ public class ArtisteService {
     @Autowired
     private PhotoRepository photoRepository;
 
-    private ArtisteType artisteType;
 
     /**
      * Crée un nouvel artiste avec photo de profil et galerie.
@@ -61,6 +61,7 @@ public class ArtisteService {
     }
 
     public Optional<ArtisteModel> getArtisteById(Long id) {
+        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         return artisteRepository.findById(id);
     }
 
@@ -69,6 +70,12 @@ public class ArtisteService {
     }
 
     public ArtisteModel updateArtiste(Long id, String name, String discipline, String bio, String type, MultipartFile photoProfil) throws IOException {
+        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
+        Objects.requireNonNull(name, "Le nom ne peut pas être nul");
+        Objects.requireNonNull(discipline, "La discipline ne peut pas être nulle");
+        Objects.requireNonNull(bio, "La biographie ne peut pas être nulle");
+        Objects.requireNonNull(type, "Le type ne peut pas être nul");
+
         ArtisteModel artiste = artisteRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
 
         artiste.setName(name);
@@ -88,6 +95,7 @@ public class ArtisteService {
     }
 
     public void deleteArtiste(Long id) {
+        Objects.requireNonNull(id, "id cannot be null");
         ArtisteModel artiste = artisteRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
 
         // Supprime photo de profil
@@ -97,6 +105,7 @@ public class ArtisteService {
 
         // Supprime galerie
         List<Photo> photos = photoRepository.findByArtisteId(id);
+        Objects.requireNonNull(photos, "photos cannot be null");
         for (Photo photo : photos) {
             deletePhoto(photo.getFilename());
         }
@@ -106,6 +115,9 @@ public class ArtisteService {
     }
 
     public Photo addGalleryPhoto(Long artisteId, MultipartFile file) throws IOException {
+        Objects.requireNonNull(artisteId, "artisteId cannot be null");
+        Objects.requireNonNull(file, "file cannot be null");
+
         ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
 
         String filename = savePhoto(file, "galerie", artisteId);
@@ -116,10 +128,12 @@ public class ArtisteService {
     }
 
     public List<Photo> getGalleryPhotos(Long artisteId) {
+        Objects.requireNonNull(artisteId, "artisteId cannot be null");
         return photoRepository.findByArtisteId(artisteId);
     }
 
     public void deleteGalleryPhoto(Long photoId) {
+        Objects.requireNonNull(photoId, "photoId cannot be null");
         Photo photo = photoRepository.findById(photoId).orElseThrow(() -> new IllegalArgumentException("Photo non trouvée"));
 
         deletePhoto(photo.getFilename());
@@ -127,6 +141,7 @@ public class ArtisteService {
     }
 
     public byte[] getPhotoProfilData(Long artisteId) throws IOException {
+        Objects.requireNonNull(artisteId, "artisteId cannot be null");
         ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
         if (artiste.getPhotoProfil() == null) throw new IllegalArgumentException("Photo de profil non trouvée");
 
@@ -135,6 +150,7 @@ public class ArtisteService {
     }
 
     public String getPhotoProfilContentType(Long artisteId) throws IOException {
+        Objects.requireNonNull(artisteId, "artisteId cannot be null");
         ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
         if (artiste.getPhotoProfil() == null) throw new IllegalArgumentException("Photo de profil non trouvée");
 
@@ -171,10 +187,12 @@ public class ArtisteService {
     }
 
     public ArtisteModel saveArtiste(ArtisteModel artiste) {
+        Objects.requireNonNull(artiste, "ArtisteModel cannot be null");
         return artisteRepository.save(artiste);
     }
 
     public ArtisteModel save(ArtisteModel artiste) {
+        Objects.requireNonNull(artiste, "ArtisteModel cannot be null");
         return artisteRepository.save(artiste);
     }
 

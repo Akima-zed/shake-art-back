@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 
 @Service
 public class EquipeContentService {
@@ -59,6 +60,7 @@ public class EquipeContentService {
      * Supprime un contenu par son ID
      */
     public boolean deleteById(Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         if (contentRepository.existsById(id)) {
             contentRepository.deleteById(id);
             return true;

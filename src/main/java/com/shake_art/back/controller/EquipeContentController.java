@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.lang.NonNull;
 
 import com.shake_art.back.model.EquipeContent;
 import com.shake_art.back.model.EquipeModel;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Contrôleur REST pour la gestion complète de la page Équipe :
@@ -173,7 +175,7 @@ public class EquipeContentController {
      * Exemple URL : GET /api/equipe/images/banner/nomFichier.jpg
      */
     @GetMapping("/images/banner/{filename:.+}")
-    public ResponseEntity<Resource> getBannerImage(@PathVariable String filename) {
+    public ResponseEntity<Resource> getBannerImage(@PathVariable @NonNull String filename) {
         return serveImageFile(bannersDir, filename);
     }
 
@@ -182,7 +184,7 @@ public class EquipeContentController {
      * Exemple URL : GET /api/equipe/images/members/nomFichier.jpg
      */
     @GetMapping("/images/members/{filename:.+}")
-    public ResponseEntity<Resource> getMemberPhoto(@PathVariable String filename) {
+    public ResponseEntity<Resource> getMemberPhoto(@PathVariable @NonNull String filename) {
         return serveImageFile(membersDir, filename);
     }
 
@@ -190,9 +192,10 @@ public class EquipeContentController {
      * Méthode utilitaire pour servir un fichier image à partir d'un dossier donné.
      * Gère les erreurs (fichier non trouvé, non lisible).
      */
-    private ResponseEntity<Resource> serveImageFile(Path directory, String filename) {
+    private ResponseEntity<Resource> serveImageFile(Path directory, @NonNull String filename) {
+        Objects.requireNonNull(directory, "Directory path cannot be null");
+        Path file = directory.resolve(filename);
         try {
-            Path file = directory.resolve(filename).normalize();
             if (!Files.exists(file) || !Files.isReadable(file)) {
                 return ResponseEntity.notFound().build();
             }
