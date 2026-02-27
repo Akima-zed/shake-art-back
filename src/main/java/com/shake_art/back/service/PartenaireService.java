@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.lang.NonNull;
 
 import com.shake_art.back.model.PartenaireContent;
 import com.shake_art.back.repository.PartenaireContentRepository;
@@ -28,7 +29,8 @@ public class PartenaireService {
     private static final String LOGO_DIRECTORY = "uploads/logos";
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-    public Partenaire create(String nom, String description, String siteWeb, MultipartFile logoFile) throws IOException {
+    public Partenaire create(String nom, String description, String siteWeb, MultipartFile logoFile)
+            throws IOException {
         String logoPath = null;
         if (logoFile != null && !logoFile.isEmpty()) {
             logoPath = saveLogo(logoFile);
@@ -47,14 +49,20 @@ public class PartenaireService {
         return partenaireRepository.findAll();
     }
 
-    public Optional<Partenaire> getOne(Long id) {
-        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
+    public Optional<Partenaire> getOne(@NonNull Long id) {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         return partenaireRepository.findById(id);
     }
 
-    public Partenaire update(Long id, String nom, String description, String siteWeb, MultipartFile logoFile) throws IOException {
-        Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
-        Partenaire p = partenaireRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
+    public Partenaire update(@NonNull Long id, String nom, String description, String siteWeb, MultipartFile logoFile)
+            throws IOException {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
+        Long validatedId = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
+        Partenaire p = partenaireRepository.findById(validatedId)
+                .orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
+
+        Objects.requireNonNull(nom, "Le nom ne peut pas être nul");
+        Objects.requireNonNull(description, "La description ne peut pas être nulle");
 
         p.setNom(nom);
         p.setDescription(description);
@@ -70,8 +78,10 @@ public class PartenaireService {
         return partenaireRepository.save(p);
     }
 
-    public void delete(Long id) {
-        Partenaire p = partenaireRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
+    public void delete(@NonNull Long id) {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
+        Partenaire p = partenaireRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
         if (p.getLogo() != null) {
             deleteLogo(p.getLogo());
         }
@@ -82,7 +92,8 @@ public class PartenaireService {
 
     private String saveLogo(MultipartFile file) throws IOException {
         validateFile(file);
-        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename())).replaceAll("\\s+", "_");
+        String filename = UUID.randomUUID() + "_"
+                + StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename())).replaceAll("\\s+", "_");
         Path directory = Paths.get(LOGO_DIRECTORY);
         Files.createDirectories(directory);
         Path destination = directory.resolve(filename);

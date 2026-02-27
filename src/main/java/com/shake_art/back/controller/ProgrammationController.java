@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-
 /**
  * Contrôleur REST pour gérer la programmation avec conversion DTO <-> Model.
  */
@@ -30,11 +29,9 @@ public class ProgrammationController {
     private final ProgrammationRepository programmationRepository;
     private final ActiviteRepository activiteRepository;
 
-
-
     public ProgrammationController(ProgrammationService service,
-                                   ProgrammationRepository programmationRepository,
-                                   ActiviteRepository activiteRepository) {
+            ProgrammationRepository programmationRepository,
+            ActiviteRepository activiteRepository) {
         this.service = service;
         this.programmationRepository = programmationRepository;
         this.activiteRepository = activiteRepository;
@@ -58,7 +55,7 @@ public class ProgrammationController {
         dto.setDate(prog.getDate());
         dto.setAnnee(prog.getAnnee());
         dto.setActivites(prog.getActivites().stream()
-                .filter(a -> a != null && a.getId() != null)
+                .filter(a -> Objects.nonNull(a) && Objects.nonNull(a.getId()))
                 .map(this::modelToDtoActivite)
                 .collect(Collectors.toList()));
         return ResponseEntity.ok(dto);
@@ -75,6 +72,7 @@ public class ProgrammationController {
     @Transactional
     public ResponseEntity<ProgrammationModel> create(@RequestBody ProgrammationDto dto) {
         ProgrammationModel model = dtoToModel(dto);
+        model = Objects.requireNonNull(model, "Le modèle de programmation ne peut pas être nul");
         ProgrammationModel saved = service.save(model);
         return ResponseEntity.ok(saved);
     }
@@ -82,7 +80,8 @@ public class ProgrammationController {
     /** Mise à jour d'une programmation existante depuis un DTO JSON. */
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Transactional
-    public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id, @RequestBody ProgrammationDto dto) {
+    public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id,
+            @RequestBody ProgrammationDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         ProgrammationModel existing = service.getById(id);
         existing.setDate(dto.getDate());
@@ -91,17 +90,15 @@ public class ProgrammationController {
                 dto.getActivites()
                         .stream()
                         .map(this::dtoToModelActivite)
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
         ProgrammationModel updated = service.save(existing);
         return ResponseEntity.ok(updated);
     }
 
-
-
     @DeleteMapping("/{programmationId}/activites/{activiteId}")
     @Transactional
-    public ResponseEntity<Void> deleteActivite(@PathVariable @NonNull Long programmationId, @PathVariable @NonNull Long activiteId) {
+    public ResponseEntity<Void> deleteActivite(@PathVariable @NonNull Long programmationId,
+            @PathVariable @NonNull Long activiteId) {
         ProgrammationModel prog = programmationRepository.findById(programmationId)
                 .orElseThrow(() -> new RuntimeException("Programmation introuvable avec l'id " + programmationId));
 
@@ -122,12 +119,15 @@ public class ProgrammationController {
         return ResponseEntity.ok().build();
     }
 
-
-
-    /** Création d'une activité indépendante (rarement utilisé, préférer via programmation). */
+    /**
+     * Création d'une activité indépendante (rarement utilisé, préférer via
+     * programmation).
+     */
     @PostMapping("/activites")
     public ActiviteModel createActivite(@RequestBody ActiviteDto dto) {
-        ActiviteModel activite = dtoToModelActivite(dto);
+        Objects.requireNonNull(dto, "ActiviteDto cannot be null");
+        ActiviteModel activite = Objects.requireNonNull(dtoToModelActivite(dto),
+                "Converted ActiviteModel cannot be null");
         return activiteRepository.save(activite);
     }
 
@@ -135,11 +135,12 @@ public class ProgrammationController {
     @PutMapping("/activites/{id}")
     public ActiviteModel updateActivite(@PathVariable @NonNull Long id, @RequestBody ActiviteDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
+        Objects.requireNonNull(dto, "ActiviteDto cannot be null");
         ActiviteModel activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id : " + id));
 
-        activite.setName(dto.getName());
-        activite.setType(dto.getType());
+        activite.setName(Objects.requireNonNull(dto.getName(), "Name cannot be null"));
+        activite.setType(Objects.requireNonNull(dto.getType(), "Type cannot be null"));
         activite.setHeure(dto.getHeure());
         activite.setReservable(dto.getReservable());
         activite.setIntervenantId(dto.getIntervenantId());
@@ -148,11 +149,11 @@ public class ProgrammationController {
         return activiteRepository.save(activite);
     }
 
-
     // -------------- Méthodes privées de conversion DTO <-> Model --------------
 
     /**
-     * Convertit un ProgrammationDto en ProgrammationModel avec conversion des activités.
+     * Convertit un ProgrammationDto en ProgrammationModel avec conversion des
+     * activités.
      */
     private ProgrammationModel dtoToModel(ProgrammationDto dto) {
         ProgrammationModel model = new ProgrammationModel();
@@ -163,11 +164,9 @@ public class ProgrammationController {
                 dto.getActivites()
                         .stream()
                         .map(this::dtoToModelActivite)
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
         return model;
     }
-
 
     private ActiviteDto modelToDtoActivite(ActiviteModel model) {
         ActiviteDto dto = new ActiviteDto();
@@ -189,7 +188,8 @@ public class ProgrammationController {
     }
 
     /**
-     * Convertit un ActiviteDto en ActiviteModel avec liaison aux intervenants (artiste/équipe).
+     * Convertit un ActiviteDto en ActiviteModel avec liaison aux intervenants
+     * (artiste/équipe).
      */
     private ActiviteModel dtoToModelActivite(ActiviteDto dto) {
         ActiviteModel act = new ActiviteModel();
@@ -202,6 +202,5 @@ public class ProgrammationController {
         act.setIntervenantType(dto.getIntervenantType());
         return act;
     }
-
 
 }

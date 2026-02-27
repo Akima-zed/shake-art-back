@@ -33,7 +33,8 @@ public class MurPeintController {
     private final ArtisteService artisteService;
     private final ArtisteRepository artisteRepository;
 
-    public MurPeintController(MurPeintRepository murPeintRepository,    ArtisteService artisteService,                              ArtisteRepository artisteRepository) {
+    public MurPeintController(MurPeintRepository murPeintRepository, ArtisteService artisteService,
+            ArtisteRepository artisteRepository) {
         this.murPeintRepository = murPeintRepository;
         this.artisteService = artisteService;
         this.artisteRepository = artisteRepository;
@@ -57,16 +58,17 @@ public class MurPeintController {
     @PostMapping
     public ResponseEntity<MurPeintDto> create(@RequestBody MurPeint mur) {
         if (mur.getArtiste() != null && mur.getArtiste().getId() != null) {
-            Objects.requireNonNull(mur.getArtiste().getId(), "L'identifiant de l'artiste ne peut pas être nul");
-            Optional<ArtisteModel> artiste = artisteRepository.findById(mur.getArtiste().getId());
+            Long artisteId = Objects.requireNonNull(mur.getArtiste().getId(),
+                    "L'identifiant de l'artiste ne peut pas être nul");
+            Optional<ArtisteModel> artiste = artisteRepository.findById(artisteId);
             artiste.ifPresent(mur::setArtiste);
         } else {
+
             mur.setArtiste(null);
         }
         MurPeint saved = murPeintRepository.save(mur);
         return ResponseEntity.ok(toDto(saved));
     }
-
 
     // 📌 PUT: Mise à jour d’un mur peint
     @PutMapping("/{id}")
@@ -80,9 +82,10 @@ public class MurPeintController {
             mur.setPhotoUrl(murDetails.getPhotoUrl());
             mur.setAnnee(murDetails.getAnnee());
 
-            if (murDetails.getArtiste() != null && murDetails.getArtiste().getId() != null) {
-                Objects.requireNonNull(murDetails.getArtiste().getId(), "L'identifiant de l'artiste ne peut pas être nul");
-                Optional<ArtisteModel> artiste = artisteRepository.findById(murDetails.getArtiste().getId());
+            if (murDetails.getArtiste() != null) {
+                Long artisteId = Objects.requireNonNull(murDetails.getArtiste().getId(),
+                        "L'identifiant de l'artiste ne peut pas être nul");
+                Optional<ArtisteModel> artiste = artisteRepository.findById(artisteId);
                 artiste.ifPresent(mur::setArtiste);
             } else {
                 mur.setArtiste(null);
@@ -92,7 +95,6 @@ public class MurPeintController {
             return ResponseEntity.ok(toDto(updated));
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
-
 
     // 📌 DELETE: Suppression d’un mur peint
     @DeleteMapping("/{id}")
@@ -125,7 +127,8 @@ public class MurPeintController {
                 Files.createDirectories(uploadPath);
             }
 
-            String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename(), "Original filename cannot be null"));
+            String originalFilename = StringUtils
+                    .cleanPath(Objects.requireNonNull(file.getOriginalFilename(), "Original filename cannot be null"));
             String ext = "";
             int dotIndex = originalFilename.lastIndexOf('.');
             if (dotIndex >= 0) {
@@ -143,9 +146,10 @@ public class MurPeintController {
         }
     }
 
-    // ✅ ✅ ✅ POST: Copier une photo depuis la galerie vers le dossier des fresques
+    // POST: Copier une photo depuis la galerie vers le dossier des fresques
     @PostMapping("/{id}/valider-photo")
-    public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable @NonNull Long id, @RequestBody String nomFichier) {
+    public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable @NonNull Long id,
+            @RequestBody String nomFichier) {
         Objects.requireNonNull(id, "ID cannot be null");
         try {
             nomFichier = nomFichier.replace("\"", ""); // Supprimer les guillemets éventuels

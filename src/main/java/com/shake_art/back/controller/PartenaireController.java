@@ -14,6 +14,9 @@ import com.shake_art.back.service.PartenaireService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+
+import org.springframework.lang.NonNull;
 
 @RestController
 @RequestMapping("/partenaires")
@@ -27,18 +30,14 @@ public class PartenaireController {
     @Operation(summary = "Créer un partenaire", description = "Ajoute un nouveau partenaire avec un logo optionnel.")
     @PostMapping
     public ResponseEntity<Partenaire> create(
-            @Parameter(description = "Nom du partenaire", required = true)
-            @RequestParam String nom,
+            @Parameter(description = "Nom du partenaire", required = true) @RequestParam String nom,
 
-            @Parameter(description = "Description du partenaire", required = true)
-            @RequestParam String description,
+            @Parameter(description = "Description du partenaire", required = true) @RequestParam String description,
 
-            @Parameter(description = "URL du site web du partenaire", required = true)
-            @RequestParam String siteWeb,
+            @Parameter(description = "URL du site web du partenaire", required = true) @RequestParam String siteWeb,
 
-            @Parameter(description = "Logo du partenaire (fichier image)")
-            @RequestParam(required = false) MultipartFile logo
-    ) throws IOException {
+            @Parameter(description = "Logo du partenaire (fichier image)") @RequestParam(required = false) MultipartFile logo)
+            throws IOException {
         Partenaire p = partenaireService.create(nom, description, siteWeb, logo);
         return ResponseEntity.ok(p);
     }
@@ -52,9 +51,8 @@ public class PartenaireController {
     @Operation(summary = "Récupère un partenaire par son ID")
     @GetMapping("/{id}")
     public ResponseEntity<Partenaire> getOne(
-            @Parameter(description = "ID du partenaire à récupérer")
-            @PathVariable Long id
-    ) {
+            @Parameter(description = "ID du partenaire à récupérer") @PathVariable @NonNull Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         return partenaireService.getOne(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -63,21 +61,17 @@ public class PartenaireController {
     @Operation(summary = "Met à jour un partenaire existant", description = "Modifie les informations du partenaire, y compris le logo.")
     @PutMapping("/{id}")
     public ResponseEntity<Partenaire> update(
-            @Parameter(description = "ID du partenaire à mettre à jour", required = true)
-            @PathVariable Long id,
+            @Parameter(description = "ID du partenaire à mettre à jour", required = true) @PathVariable @NonNull Long id,
 
-            @Parameter(description = "Nouveau nom", required = true)
-            @RequestParam String nom,
+            @Parameter(description = "Nouveau nom", required = true) @RequestParam String nom,
 
-            @Parameter(description = "Nouvelle description", required = true)
-            @RequestParam String description,
+            @Parameter(description = "Nouvelle description", required = true) @RequestParam String description,
 
-            @Parameter(description = "Nouveau site web", required = true)
-            @RequestParam String siteWeb,
+            @Parameter(description = "Nouveau site web", required = true) @RequestParam String siteWeb,
 
-            @Parameter(description = "Nouveau logo (optionnel)")
-            @RequestParam(required = false) MultipartFile logo
-    ) throws IOException {
+            @Parameter(description = "Nouveau logo (optionnel)") @RequestParam(required = false) MultipartFile logo)
+            throws IOException {
+        Objects.requireNonNull(id, "ID cannot be null");
         Partenaire p = partenaireService.update(id, nom, description, siteWeb, logo);
         return ResponseEntity.ok(p);
     }
@@ -85,9 +79,8 @@ public class PartenaireController {
     @Operation(summary = "Supprime un partenaire par son ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID du partenaire à supprimer", required = true)
-            @PathVariable Long id
-    ) {
+            @Parameter(description = "ID du partenaire à supprimer", required = true) @PathVariable @NonNull Long id) {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         partenaireService.delete(id);
         return ResponseEntity.ok().build();
     }
@@ -105,7 +98,5 @@ public class PartenaireController {
     public ResponseEntity<PartenaireContent> updateContent(@RequestBody PartenaireContent content) {
         return ResponseEntity.ok(partenaireService.updateContent(content));
     }
-
-
 
 }

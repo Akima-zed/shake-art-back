@@ -8,10 +8,11 @@ import com.shake_art.back.repository.ProgrammationRepository;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import java.util.Objects;
 
 @Service
 public class ProgrammationService {
@@ -57,7 +58,8 @@ public class ProgrammationService {
         return repository.findAll();
     }
 
-    public ProgrammationModel getById(Long id) {
+    public ProgrammationModel getById(@NonNull Long id) {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         return repository.findById(id).orElse(null);
     }
 
@@ -65,12 +67,14 @@ public class ProgrammationService {
         return repository.findByAnnee(annee);
     }
 
-    public ProgrammationModel save(ProgrammationModel programmation) {
+    public ProgrammationModel save(@NonNull ProgrammationModel programmation) {
+        programmation = Objects.requireNonNull(programmation, "La programmation ne peut pas être nulle");
         validateProgrammation(programmation);
         return repository.save(programmation);
     }
 
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
+        id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         if (!repository.existsById(id)) {
             throw new IllegalArgumentException("La programmation avec l'ID " + id + " n'existe pas.");
         }

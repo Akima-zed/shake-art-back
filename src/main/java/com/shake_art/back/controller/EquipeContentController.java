@@ -74,13 +74,15 @@ public class EquipeContentController {
     @DeleteMapping("/content/{id}")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
         boolean deleted = service.deleteById(id);
-        if (deleted) return ResponseEntity.noContent().build();
+        if (deleted)
+            return ResponseEntity.noContent().build();
         return ResponseEntity.notFound().build();
     }
 
     /**
      * Upload d'une image bannière pour la page équipe
      * Création automatique du dossier si nécessaire.
+     * 
      * @param file fichier image (champ form-data "file")
      * @return URL publique (endpoint) pour accéder à cette image
      */
@@ -117,14 +119,17 @@ public class EquipeContentController {
 
     /** Ajoute un nouveau membre */
     @PostMapping("/members")
-    public ResponseEntity<EquipeModel> addMember(@RequestBody EquipeModel member) {
+    public ResponseEntity<EquipeModel> addMember(@RequestBody @NonNull EquipeModel member) {
+        Objects.requireNonNull(member, "EquipeModel cannot be null");
         EquipeModel saved = service.addMember(member);
         return ResponseEntity.status(201).body(saved);
     }
 
     /** Met à jour un membre existant */
     @PutMapping("/members/{id}")
-    public ResponseEntity<?> updateMember(@PathVariable Long id, @RequestBody EquipeModel member) {
+    public ResponseEntity<?> updateMember(@PathVariable @NonNull Long id, @RequestBody @NonNull EquipeModel member) {
+        Objects.requireNonNull(id, "ID cannot be null");
+        Objects.requireNonNull(member, "EquipeModel cannot be null");
         if (!id.equals(member.getId())) {
             return ResponseEntity.badRequest().body("L'id du membre dans le corps ne correspond pas à l'id de l'URL");
         }
@@ -134,7 +139,8 @@ public class EquipeContentController {
 
     /** Supprime un membre par son ID */
     @DeleteMapping("/members/{id}")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMember(@PathVariable @NonNull Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         service.deleteMember(id);
         return ResponseEntity.noContent().build();
     }
@@ -143,12 +149,15 @@ public class EquipeContentController {
      * Upload de la photo d'un membre.
      * Crée le dossier si nécessaire.
      * Met à jour la photo dans la base (URL) et stocke l'image sur disque.
-     * @param id ID du membre
+     * 
+     * @param id   ID du membre
      * @param file fichier image multipart/form-data "file"
      * @return URL publique d'accès à la photo uploadée
      */
     @PostMapping("/members/{id}/upload-photo")
-    public ResponseEntity<?> uploadMemberPhoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadMemberPhoto(@PathVariable @NonNull Long id,
+            @RequestParam("file") MultipartFile file) {
+        Objects.requireNonNull(id, "ID cannot be null");
         try {
             String imageUrl = service.uploadMemberPhoto(id, file);
             return ResponseEntity.ok(imageUrl);
@@ -163,12 +172,14 @@ public class EquipeContentController {
      * - supprime l'URL photo dans la base
      */
     @DeleteMapping("/members/{id}/delete-photo")
-    public ResponseEntity<?> deleteMemberPhoto(@PathVariable Long id) throws IOException {
+    public ResponseEntity<?> deleteMemberPhoto(@PathVariable @NonNull Long id) throws IOException {
+        Objects.requireNonNull(id, "ID cannot be null");
         service.deleteMemberPhoto(id);
         return ResponseEntity.ok("Photo du membre supprimée avec succès");
     }
 
-    // ----------- Endpoints pour servir les images (bannière et photos membres) -----------
+    // ----------- Endpoints pour servir les images (bannière et photos membres)
+    // -----------
 
     /**
      * Sert une image bannière à partir du nom de fichier.
@@ -200,13 +211,14 @@ public class EquipeContentController {
                 return ResponseEntity.notFound().build();
             }
 
-            Resource resource = new UrlResource(file.toUri());
+            Resource resource = new UrlResource(Objects.requireNonNull(file.toUri(), "URI cannot be null"));
 
             // Tentative de détermination du type MIME
             String contentType = "application/octet-stream";
             try {
-                contentType = Files.probeContentType(file);
-            } catch (IOException ignored) {}
+                contentType = Objects.requireNonNull(Files.probeContentType(file), "Content type cannot be null");
+            } catch (IOException ignored) {
+            }
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))

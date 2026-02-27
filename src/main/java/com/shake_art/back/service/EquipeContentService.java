@@ -3,6 +3,7 @@ package com.shake_art.back.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.lang.NonNull;
 
 import com.shake_art.back.model.EquipeContent;
 import com.shake_art.back.model.EquipeModel;
@@ -80,15 +81,18 @@ public class EquipeContentService {
     /**
      * Ajoute un nouveau membre
      */
-    public EquipeModel addMember(EquipeModel member) {
+    public EquipeModel addMember(@NonNull EquipeModel member) {
+        Objects.requireNonNull(member, "EquipeModel cannot be null");
         return memberRepository.save(member);
     }
 
     /**
      * Met à jour un membre existant
      */
-    public EquipeModel updateMember(EquipeModel member) {
-        if (member.getId() == null || !memberRepository.existsById(member.getId())) {
+    public EquipeModel updateMember(@NonNull EquipeModel member) {
+        Objects.requireNonNull(member, "EquipeModel cannot be null");
+        Long memberId = Objects.requireNonNull(member.getId(), "Member ID cannot be null");
+        if (!memberRepository.existsById(memberId)) {
             throw new IllegalArgumentException("Membre non trouvé ou id manquant");
         }
         return memberRepository.save(member);
@@ -98,7 +102,8 @@ public class EquipeContentService {
      * Supprime un membre par son ID
      * Note : supprime aussi la photo sur disque si existante
      */
-    public void deleteMember(Long id) {
+    public void deleteMember(@NonNull Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         memberRepository.findById(id).ifPresent(member -> {
             if (member.getPhotoUrl() != null) {
                 deleteFileIfExists(member.getPhotoUrl());
@@ -110,8 +115,10 @@ public class EquipeContentService {
     // --- Upload bannière équipe ---
 
     /**
-     * Upload physique de la bannière + sauvegarde uniquement le nom du fichier dans contenu équipe.
-     * Retourne l'URL complète publique pour accéder à cette bannière (endpoint REST).
+     * Upload physique de la bannière + sauvegarde uniquement le nom du fichier dans
+     * contenu équipe.
+     * Retourne l'URL complète publique pour accéder à cette bannière (endpoint
+     * REST).
      *
      * @param file fichier image multipart/form-data
      * @return URL complète d'accès à la bannière
@@ -122,7 +129,8 @@ public class EquipeContentService {
         Files.createDirectories(Paths.get(UPLOAD_DIR_BANNERS));
 
         // Génère un nom de fichier unique basé sur timestamp + nom original
-        String fileName = System.currentTimeMillis() + "_" + Path.of(file.getOriginalFilename()).getFileName().toString();
+        String fileName = System.currentTimeMillis() + "_"
+                + Path.of(file.getOriginalFilename()).getFileName().toString();
         Path filePath = Paths.get(UPLOAD_DIR_BANNERS, fileName);
 
         // Enregistre le fichier sur disque (remplace s'il existe)
@@ -164,21 +172,24 @@ public class EquipeContentService {
     // --- Upload photo membre ---
 
     /**
-     * Upload physique photo membre + sauvegarde uniquement le nom du fichier dans base.
+     * Upload physique photo membre + sauvegarde uniquement le nom du fichier dans
+     * base.
      * Retourne l'URL complète publique pour accéder à la photo.
      *
      * @param memberId ID du membre
-     * @param file fichier image multipart/form-data
+     * @param file     fichier image multipart/form-data
      * @return URL complète d'accès à la photo du membre
      * @throws IOException
      */
-    public String uploadMemberPhoto(Long memberId, MultipartFile file) throws IOException {
+    public String uploadMemberPhoto(@NonNull Long memberId, MultipartFile file) throws IOException {
+        Objects.requireNonNull(memberId, "Member ID cannot be null");
         EquipeModel member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Membre non trouvé"));
 
         Files.createDirectories(Paths.get(UPLOAD_DIR_MEMBERS));
 
-        String fileName = System.currentTimeMillis() + "_" + Path.of(file.getOriginalFilename()).getFileName().toString();
+        String fileName = System.currentTimeMillis() + "_"
+                + Path.of(file.getOriginalFilename()).getFileName().toString();
         Path filePath = Paths.get(UPLOAD_DIR_MEMBERS, fileName);
 
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -204,7 +215,8 @@ public class EquipeContentService {
      * @param memberId ID du membre
      * @throws IOException
      */
-    public void deleteMemberPhoto(Long memberId) throws IOException {
+    public void deleteMemberPhoto(@NonNull Long memberId) throws IOException {
+        Objects.requireNonNull(memberId, "Member ID cannot be null");
         EquipeModel member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Membre non trouvé"));
 
@@ -215,7 +227,8 @@ public class EquipeContentService {
         }
     }
 
-    // --- Méthode utilitaire pour supprimer un fichier à partir d'une URL stockée ---
+    // --- Méthode utilitaire pour supprimer un fichier à partir d'une URL stockée
+    // ---
 
     /**
      * Supprime un fichier physique si il existe.
@@ -224,7 +237,8 @@ public class EquipeContentService {
      * Exemple d'URL : "/api/equipe/images/banner/12345_image.jpg"
      * On extrait "12345_image.jpg" et supprime dans le dossier correspondant.
      *
-     * @param fileUrl URL relative stockée en base (doit contenir /banner/ ou /members/)
+     * @param fileUrl URL relative stockée en base (doit contenir /banner/ ou
+     *                /members/)
      */
     private void deleteFileIfExists(String fileUrl) {
         try {
