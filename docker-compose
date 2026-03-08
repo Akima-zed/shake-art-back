@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  mysql:
+    # Image MySQL officielle (LTS actuelle)
+    image: mysql:8.4
+    # Nom fixe du conteneur pour le retrouver facilement
+    container_name: shake-art-mysql
+    # Redémarre automatiquement sauf arrêt manuel
+    restart: unless-stopped
+
+    ports:
+      # Port hôte:port conteneur (MySQL local sur 3306)
+      - "3306:3306"
+
+    environment:
+      # Mot de passe root (dev uniquement)
+      MYSQL_ROOT_PASSWORD: root
+      # Base créée automatiquement au démarrage
+      MYSQL_DATABASE: shake_art
+      # Fuseau horaire
+      TZ: UTC
+
+    command: >
+      # Auth moderne MySQL 8
+      --default-authentication-plugin=caching_sha2_password
+      # Encodage UTF-8 complet
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+    volumes:
+      # Volume nommé pour conserver les données entre redémarrages
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      # Vérifie que MySQL répond bien
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  # Définition du volume Docker persistant
+  mysql_data:
