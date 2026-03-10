@@ -82,6 +82,7 @@ class ValidationIntegrationTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message").value("Requete invalide"))
                 .andExpect(jsonPath("$.details.email").exists())
                 .andExpect(jsonPath("$.details.password").exists());
@@ -101,6 +102,7 @@ class ValidationIntegrationTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message").value("Requete invalide"))
                 .andExpect(jsonPath("$.details.date").exists())
                 .andExpect(jsonPath("$.details.annee").exists())
@@ -121,6 +123,7 @@ class ValidationIntegrationTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message").value("Requete invalide"))
                 .andExpect(jsonPath("$.details.email").exists());
     }

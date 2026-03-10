@@ -1,5 +1,6 @@
 package com.shake_art.back.service;
 
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.AccueilContent;
 import com.shake_art.back.model.CardPresentation;
 import com.shake_art.back.repository.AccueilContentRepository;
@@ -63,13 +64,13 @@ public class AccueilContentService {
 
     public String uploadImageForCard(Long cardId, MultipartFile file) throws IOException {
         AccueilContent content = repository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("Accueil non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contenu d'accueil introuvable"));
 
         CardPresentation card = content.getCards()
                 .stream()
                 .filter(c -> c.getId() != null && c.getId().equals(cardId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Carte non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException("Carte non trouvee"));
 
         String uploadDir = "uploads/cards";
         Files.createDirectories(Paths.get(uploadDir));

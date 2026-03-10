@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.Partenaire;
 import com.shake_art.back.model.PartenaireContent;
 import com.shake_art.back.service.PartenaireService;
@@ -53,9 +54,9 @@ public class PartenaireController {
     public ResponseEntity<Partenaire> getOne(
             @Parameter(description = "ID du partenaire à récupérer") @PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
-        return partenaireService.getOne(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Partenaire partenaire = partenaireService.getOne(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Partenaire introuvable avec l'id " + id));
+        return ResponseEntity.ok(partenaire);
     }
 
     @Operation(summary = "Met à jour un partenaire existant", description = "Modifie les informations du partenaire, y compris le logo.")

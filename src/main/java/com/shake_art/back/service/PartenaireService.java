@@ -1,5 +1,8 @@
 package com.shake_art.back.service;
 
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -59,7 +62,7 @@ public class PartenaireService {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         Long validatedId = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         Partenaire p = partenaireRepository.findById(validatedId)
-                .orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
+            .orElseThrow(() -> new ResourceNotFoundException("Partenaire introuvable"));
 
         Objects.requireNonNull(nom, "Le nom ne peut pas être nul");
         Objects.requireNonNull(description, "La description ne peut pas être nulle");
@@ -81,7 +84,7 @@ public class PartenaireService {
     public void delete(@NonNull Long id) {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         Partenaire p = partenaireRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Partenaire introuvable"));
+            .orElseThrow(() -> new ResourceNotFoundException("Partenaire introuvable"));
         if (p.getLogo() != null) {
             deleteLogo(p.getLogo());
         }
@@ -103,16 +106,19 @@ public class PartenaireService {
 
     private void validateFile(MultipartFile file) {
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("Le fichier dépasse la taille maximale autorisée de 5 Mo.");
+            throw new BusinessException("Le fichier depasse la taille maximale autorisee de 5 Mo");
         }
         if (!Objects.requireNonNull(file.getContentType()).startsWith("image/")) {
-            throw new IllegalArgumentException("Type de fichier non valide. Seuls les fichiers image sont autorisés.");
+            throw new BusinessException("Type de fichier non valide. Seuls les fichiers image sont autorises");
         }
     }
 
     private void deleteLogo(String relativePath) {
         try {
-            Files.deleteIfExists(Paths.get(LOGO_DIRECTORY, relativePath));
+            String normalized = relativePath.startsWith("logos/")
+                    ? relativePath.substring("logos/".length())
+                    : relativePath;
+            Files.deleteIfExists(Paths.get(LOGO_DIRECTORY, normalized));
         } catch (IOException e) {
             System.err.println("Erreur suppression logo : " + e.getMessage());
         }

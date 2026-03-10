@@ -3,19 +3,31 @@ package com.shake_art.back.exception;
 import java.time.Instant;
 import java.util.Map;
 
-public class ValidationErrorResponse {
+/**
+ * Format JSON commun pour toutes les erreurs de l'API.
+ *
+ * <p>Quand une erreur arrive (validation, metier, securite, technique),
+ * la reponse HTTP renvoie toujours cette structure pour que le frontend
+ * sache quoi lire de facon stable.</p>
+ */
+public class ApiErrorResponse {
 
     private final Instant timestamp;
     private final int status;
     private final String error;
+    private final String code;
     private final String message;
     private final String path;
-    private final Map<String, String> details;
+    private final Map<String, Object> details;
 
-    public ValidationErrorResponse(int status, String error, String message, String path, Map<String, String> details) {
+    /**
+     * Cree un objet d'erreur pret a etre renvoye au client.
+     */
+    public ApiErrorResponse(int status, String error, String code, String message, String path, Map<String, Object> details) {
         this.timestamp = Instant.now();
         this.status = status;
         this.error = error;
+        this.code = code;
         this.message = message;
         this.path = path;
         this.details = details;
@@ -33,6 +45,10 @@ public class ValidationErrorResponse {
         return error;
     }
 
+    public String getCode() {
+        return code;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -41,7 +57,7 @@ public class ValidationErrorResponse {
         return path;
     }
 
-    public Map<String, String> getDetails() {
+    public Map<String, Object> getDetails() {
         return details;
     }
 }

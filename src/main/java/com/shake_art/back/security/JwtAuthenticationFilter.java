@@ -1,10 +1,13 @@
 package com.shake_art.back.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shake_art.back.exception.ApiErrorResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(
@@ -59,7 +63,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Toute erreur de parsing/validation du token est traitee en non autorise.
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"error\":\"Token invalide ou expire\"}");
+            ApiErrorResponse payload = new ApiErrorResponse(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Unauthorized",
+                    "INVALID_TOKEN",
+                    "Token invalide ou expire",
+                    request.getRequestURI(),
+                    Collections.emptyMap()
+            );
+            objectMapper.writeValue(response.getWriter(), payload);
         }
     }
 }

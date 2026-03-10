@@ -2,6 +2,8 @@ package com.shake_art.back.service;
 
 import com.shake_art.back.dto.ActiviteDto;
 import com.shake_art.back.dto.ProgrammationDto;
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.ActiviteModel;
 import com.shake_art.back.model.ProgrammationModel;
 import com.shake_art.back.repository.ProgrammationRepository;
@@ -76,20 +78,20 @@ public class ProgrammationService {
     public void delete(@NonNull Long id) {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("La programmation avec l'ID " + id + " n'existe pas.");
+            throw new ResourceNotFoundException("Programmation introuvable avec l'ID " + id);
         }
         repository.deleteById(id);
     }
 
     private void validateProgrammation(ProgrammationModel programmation) {
         if (programmation.getDate() == null || programmation.getDate().isEmpty()) {
-            throw new IllegalArgumentException("La date de la programmation est obligatoire.");
+            throw new BusinessException("La date de la programmation est obligatoire");
         }
         if (programmation.getAnnee() == null || programmation.getAnnee() <= 0) {
-            throw new IllegalArgumentException("L'année de la programmation est invalide.");
+            throw new BusinessException("L'annee de la programmation est invalide");
         }
         if (programmation.getActivites() == null || programmation.getActivites().isEmpty()) {
-            throw new IllegalArgumentException("La programmation doit contenir au moins une activité.");
+            throw new BusinessException("La programmation doit contenir au moins une activite");
         }
     }
 

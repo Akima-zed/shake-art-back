@@ -1,5 +1,6 @@
 package com.shake_art.back.service;
 
+import com.shake_art.back.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
@@ -39,7 +40,7 @@ public class ReservationService {
     public ReservationModel validateReservation(@NonNull Long id) {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         ReservationModel r = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation introuvable"));
         r.setValidee(true);
         return repo.save(r);
     }
@@ -47,7 +48,7 @@ public class ReservationService {
     public ReservationModel suspendreReservation(@NonNull Long id, boolean suspendue) {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         ReservationModel r = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation introuvable"));
         r.setSuspendue(suspendue);
         return repo.save(r);
     }
