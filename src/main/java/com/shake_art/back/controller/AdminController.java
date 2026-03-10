@@ -3,6 +3,7 @@ package com.shake_art.back.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.shake_art.back.service.AdminService;
@@ -16,11 +17,13 @@ public class AdminController {
     private AdminService service;
 
     @GetMapping("/reservation-email")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> getReservationEmail() {
         return ResponseEntity.ok(service.getReservationEmail());
     }
 
     @PutMapping("/reservation-email")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateReservationEmail(@RequestBody EmailRequest request) {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             return ResponseEntity.badRequest().body("L'email ne peut pas être vide");

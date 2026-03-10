@@ -34,3 +34,8 @@ spring:
   output:
     ansi:
       enabled: always
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-with-at-least-32-characters-for-prod}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
