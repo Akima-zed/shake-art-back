@@ -86,6 +86,9 @@ public class ProgrammationController {
             @Valid @RequestBody ProgrammationDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         ProgrammationModel existing = service.getById(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("Programmation introuvable avec l'id " + id);
+        }
         existing.setDate(dto.getDate());
         existing.setAnnee(dto.getAnnee());
         existing.setActivites(

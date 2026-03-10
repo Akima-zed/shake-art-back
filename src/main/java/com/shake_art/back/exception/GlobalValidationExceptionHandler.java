@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalValidationExceptionHandler {
@@ -90,6 +91,14 @@ public class GlobalValidationExceptionHandler {
     ) {
         return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request, Collections.emptyMap());
     }
+
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<ApiErrorResponse> handleNoResourceFound(
+                        NoResourceFoundException ex,
+                        HttpServletRequest request
+        ) {
+                return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Ressource introuvable", request, Collections.emptyMap());
+        }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
