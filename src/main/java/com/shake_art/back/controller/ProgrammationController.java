@@ -1,5 +1,6 @@
 package com.shake_art.back.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -70,7 +71,7 @@ public class ProgrammationController {
     /** Création d'une programmation depuis un DTO JSON. */
     @PostMapping(consumes = "application/json", produces = "application/json")
     @Transactional
-    public ResponseEntity<ProgrammationModel> create(@RequestBody ProgrammationDto dto) {
+    public ResponseEntity<ProgrammationModel> create(@Valid @RequestBody ProgrammationDto dto) {
         ProgrammationModel model = dtoToModel(dto);
         model = Objects.requireNonNull(model, "Le modèle de programmation ne peut pas être nul");
         ProgrammationModel saved = service.save(model);
@@ -81,7 +82,7 @@ public class ProgrammationController {
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Transactional
     public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id,
-            @RequestBody ProgrammationDto dto) {
+            @Valid @RequestBody ProgrammationDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         ProgrammationModel existing = service.getById(id);
         existing.setDate(dto.getDate());
@@ -124,7 +125,7 @@ public class ProgrammationController {
      * programmation).
      */
     @PostMapping("/activites")
-    public ActiviteModel createActivite(@RequestBody ActiviteDto dto) {
+    public ActiviteModel createActivite(@Valid @RequestBody ActiviteDto dto) {
         Objects.requireNonNull(dto, "ActiviteDto cannot be null");
         ActiviteModel activite = Objects.requireNonNull(dtoToModelActivite(dto),
                 "Converted ActiviteModel cannot be null");
@@ -133,7 +134,7 @@ public class ProgrammationController {
 
     /** Mise à jour d'une activité indépendante. */
     @PutMapping("/activites/{id}")
-    public ActiviteModel updateActivite(@PathVariable @NonNull Long id, @RequestBody ActiviteDto dto) {
+    public ActiviteModel updateActivite(@PathVariable @NonNull Long id, @Valid @RequestBody ActiviteDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         Objects.requireNonNull(dto, "ActiviteDto cannot be null");
         ActiviteModel activite = activiteRepository.findById(id)

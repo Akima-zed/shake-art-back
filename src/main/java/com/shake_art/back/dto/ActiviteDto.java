@@ -1,5 +1,7 @@
 package com.shake_art.back.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,10 +9,16 @@ import lombok.Setter;
 @Setter
 public class ActiviteDto {
     private Long id;
+
+    @NotBlank(message = "Le type de l'activite est obligatoire")
     private String type;
+
+    @NotBlank(message = "Le nom de l'activite est obligatoire")
     private String name;
     private String description;
     private String heure;
+
+    @NotNull(message = "Le champ reservable est obligatoire")
     private Boolean reservable;
     private Long artisteId;
     private Long equipeId;

@@ -13,3 +13,7 @@ spring:
     show-sql: true
   flyway:
     enabled: false
+
+security:
+  jwt:
+    secret: test-secret-key-at-least-32-characters-long-for-tests
