@@ -13,6 +13,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+/**
+ * Point d'entree securite pour les requetes non authentifiees.
+ *
+ * <p>Retourne une reponse JSON au format {@link ApiErrorResponse} afin de
+ * conserver le meme contrat d'erreur que le handler global.</p>
+ */
 @Component
 @RequiredArgsConstructor
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {

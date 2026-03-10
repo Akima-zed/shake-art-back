@@ -18,6 +18,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+/**
+ * Point central de traduction des exceptions vers le contrat {@link ApiErrorResponse}.
+ *
+ * <p>Objectifs:
+ * validation homogène, codification metier lisible, et absence de fuite de stacktrace
+ * dans les reponses HTTP.</p>
+ */
 @RestControllerAdvice
 public class GlobalValidationExceptionHandler {
 
@@ -118,21 +125,21 @@ public class GlobalValidationExceptionHandler {
         return build(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Acces refuse", request, Collections.emptyMap());
     }
 
-        @ExceptionHandler(BadCredentialsException.class)
-        public ResponseEntity<ApiErrorResponse> handleBadCredentials(
-                        BadCredentialsException ex,
-                        HttpServletRequest request
-        ) {
-                return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Identifiants invalides", request, Collections.emptyMap());
-        }
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+            BadCredentialsException ex,
+            HttpServletRequest request
+    ) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Identifiants invalides", request, Collections.emptyMap());
+    }
 
-        @ExceptionHandler(AuthenticationException.class)
-        public ResponseEntity<ApiErrorResponse> handleAuthentication(
-                        AuthenticationException ex,
-                        HttpServletRequest request
-        ) {
-                return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authentification requise", request, Collections.emptyMap());
-        }
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthentication(
+            AuthenticationException ex,
+            HttpServletRequest request
+    ) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authentification requise", request, Collections.emptyMap());
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(
@@ -155,6 +162,7 @@ public class GlobalValidationExceptionHandler {
             HttpServletRequest request,
             Map<String, Object> details
     ) {
+        // Methode utilitaire unique: un seul point de construction du payload.
         ApiErrorResponse response = new ApiErrorResponse(
                 status.value(),
                 status.getReasonPhrase(),

@@ -3,6 +3,13 @@ package com.shake_art.back.exception;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Contrat JSON unique des erreurs renvoyees par l'API.
+ *
+ * <p>Toutes les erreurs applicatives, de validation et de securite doivent
+ * utiliser cette structure afin de garantir une consommation previsible cote
+ * frontend.</p>
+ */
 public class ApiErrorResponse {
 
     private final Instant timestamp;
@@ -13,6 +20,9 @@ public class ApiErrorResponse {
     private final String path;
     private final Map<String, Object> details;
 
+    /**
+     * Construit une reponse d'erreur standardisee.
+     */
     public ApiErrorResponse(int status, String error, String code, String message, String path, Map<String, Object> details) {
         this.timestamp = Instant.now();
         this.status = status;
