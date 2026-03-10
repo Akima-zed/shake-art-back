@@ -1,6 +1,9 @@
 package com.shake_art.back.controller;
 
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,16 +27,16 @@ public class AdminController {
 
     @PutMapping("/reservation-email")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateReservationEmail(@RequestBody EmailRequest request) {
-        if (request.getEmail() == null || request.getEmail().isBlank()) {
-            return ResponseEntity.badRequest().body("L'email ne peut pas être vide");
-        }
+    public ResponseEntity<?> updateReservationEmail(@Valid @RequestBody EmailRequest request) {
         service.setReservationEmail(request.getEmail());
         return ResponseEntity.ok().build();
     }
 
     // DTO interne pour la requête PUT
     public static class EmailRequest {
+
+        @NotBlank(message = "L'email ne peut pas etre vide")
+        @Email(message = "Le format de l'email est invalide")
         private String email;
 
         public String getEmail() {

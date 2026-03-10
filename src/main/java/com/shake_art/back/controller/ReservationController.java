@@ -1,5 +1,6 @@
 package com.shake_art.back.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class ReservationController {
     private EmailService emailService;
 
     @PostMapping
-    public ResponseEntity<?> reserver(@RequestBody @NonNull ReservationModel reservation) {
+    public ResponseEntity<?> reserver(@Valid @RequestBody @NonNull ReservationModel reservation) {
         Objects.requireNonNull(reservation, "La réservation ne peut pas être nulle");
         ReservationModel saved = service.save(reservation);
         emailService.envoyerConfirmation(saved);
@@ -48,7 +49,7 @@ public class ReservationController {
 
     // Nouveau endpoint pour suspendre/réactiver une réservation
     @PutMapping("/{id}/suspendre")
-    public ResponseEntity<?> suspendre(@PathVariable @NonNull Long id, @RequestBody SuspendRequest request) {
+    public ResponseEntity<?> suspendre(@PathVariable @NonNull Long id, @Valid @RequestBody SuspendRequest request) {
         ReservationModel updated = service.suspendreReservation(id, request.isSuspendue());
         return ResponseEntity.ok(updated);
     }
