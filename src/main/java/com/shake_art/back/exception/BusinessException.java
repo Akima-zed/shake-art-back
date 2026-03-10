@@ -1,23 +1,25 @@
 package com.shake_art.back.exception;
 
 /**
- * Exception metier pour les regles fonctionnelles violees.
+ * Exception metier (erreur fonctionnelle).
  *
- * <p>Le code permet de categoriser finement l'erreur dans la reponse API.</p>
+ * <p>Elle est utilisee quand la requete est techniquement valide,
+ * mais ne respecte pas une regle du domaine.
+ * Exemple: fichier trop volumineux, valeur interdite, etat non autorise.</p>
  */
 public class BusinessException extends RuntimeException {
 
     private final String code;
 
     /**
-     * Cree une exception metier avec le code par defaut {@code BUSINESS_ERROR}.
+     * Cree une erreur metier avec le code par defaut {@code BUSINESS_ERROR}.
      */
     public BusinessException(String message) {
         this("BUSINESS_ERROR", message);
     }
 
     /**
-     * Cree une exception metier avec un code explicite.
+     * Cree une erreur metier avec un code personnalise.
      */
     public BusinessException(String code, String message) {
         super(message);
