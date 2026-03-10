@@ -32,14 +32,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // API REST stateless : la protection CSRF n'est pas necessaire avec des tokens Bearer.
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+            // Ne jamais creer de session HTTP pour l'authentification avec JWT.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                // Les endpoints d'authentification et la documentation restent publics.
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                // La zone backoffice/admin exige un token authentifie.
                     .requestMatchers("/admin/**").authenticated()
+                // Les routes metier restent publiques sauf si elles sont securisees explicitement.
                     .anyRequest().permitAll()
                 )
                 .exceptionHandling(ex -> ex
@@ -51,6 +56,7 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider())
+                // Le JWT doit etre traite avant UsernamePasswordAuthenticationFilter.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -66,6 +72,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // BCrypt est le hachage adaptatif recommande pour stocker les mots de passe.
         return new BCryptPasswordEncoder();
     }
 

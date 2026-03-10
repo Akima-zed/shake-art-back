@@ -30,6 +30,7 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails, String role) {
         Map<String, Object> claims = new HashMap<>();
+        // Conserve le role dans les claims pour appliquer le controle d'acces par role.
         claims.put("role", role);
         return buildToken(claims, userDetails.getUsername());
     }
@@ -53,6 +54,7 @@ public class JwtService {
                 .claims(extraClaims)
                 .subject(subject)
                 .issuedAt(new Date(now))
+                // La duree de vie du token est externalisee (1h par defaut) pour une exploitation plus sure.
                 .expiration(new Date(now + expirationMs))
                 .signWith(getSigningKey())
                 .compact();
@@ -78,8 +80,10 @@ public class JwtService {
     private Key getSigningKey() {
         byte[] keyBytes;
         try {
+            // Privilegie une cle encodee en base64 pour les environnements de deploiement.
             keyBytes = Decoders.BASE64.decode(secret);
         } catch (IllegalArgumentException ex) {
+            // Le fallback facilite le dev local tout en preservant la compatibilite.
             keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         }
         return Keys.hmacShaKeyFor(keyBytes);

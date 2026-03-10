@@ -23,6 +23,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
+            // Retourne uniquement les metadonnees de token utiles au client.
             LoginResponse response = authService.login(request);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException ex) {
