@@ -1,5 +1,8 @@
 package com.shake_art.back.service;
 
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,7 +96,7 @@ public class EquipeContentService {
         Objects.requireNonNull(member, "EquipeModel cannot be null");
         Long memberId = Objects.requireNonNull(member.getId(), "Member ID cannot be null");
         if (!memberRepository.existsById(memberId)) {
-            throw new IllegalArgumentException("Membre non trouvé ou id manquant");
+            throw new ResourceNotFoundException("Membre non trouve ou id manquant");
         }
         return memberRepository.save(member);
     }
@@ -104,11 +107,11 @@ public class EquipeContentService {
      */
     public void deleteMember(@NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
-        memberRepository.findById(id).ifPresent(member -> {
-            if (member.getPhotoUrl() != null) {
-                deleteFileIfExists(member.getPhotoUrl());
-            }
-        });
+        EquipeModel member = memberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Membre non trouve"));
+        if (member.getPhotoUrl() != null) {
+            deleteFileIfExists("/api/equipe/images/members/" + member.getPhotoUrl());
+        }
         memberRepository.deleteById(id);
     }
 
@@ -125,19 +128,24 @@ public class EquipeContentService {
      * @throws IOException
      */
     public String uploadBannerImage(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Le fichier de banniere est obligatoire");
+        }
+
         // Crée le dossier s'il n'existe pas
         Files.createDirectories(Paths.get(UPLOAD_DIR_BANNERS));
 
         // Génère un nom de fichier unique basé sur timestamp + nom original
+        String originalFilename = Objects.requireNonNull(file.getOriginalFilename(), "Nom de fichier invalide");
         String fileName = System.currentTimeMillis() + "_"
-                + Path.of(file.getOriginalFilename()).getFileName().toString();
+            + Path.of(originalFilename).getFileName();
         Path filePath = Paths.get(UPLOAD_DIR_BANNERS, fileName);
 
         // Enregistre le fichier sur disque (remplace s'il existe)
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         // Récupère le contenu actuel
-        EquipeContent content = getContent().orElseThrow(() -> new IllegalStateException("Contenu équipe introuvable"));
+        EquipeContent content = getContent().orElseThrow(() -> new ResourceNotFoundException("Contenu equipe introuvable"));
 
         // Supprime l'ancienne bannière physique si différente pour éviter accumulation
         String oldFileName = content.getBannerImageUrl();
@@ -159,7 +167,7 @@ public class EquipeContentService {
      * - supprime l'URL dans la base
      */
     public void deleteBannerImage() throws IOException {
-        EquipeContent content = getContent().orElseThrow(() -> new IllegalStateException("Contenu équipe introuvable"));
+        EquipeContent content = getContent().orElseThrow(() -> new ResourceNotFoundException("Contenu equipe introuvable"));
 
         if (content.getBannerImageUrl() != null) {
             deleteFileIfExists("/api/equipe/images/banner/" + content.getBannerImageUrl());
@@ -183,13 +191,17 @@ public class EquipeContentService {
      */
     public String uploadMemberPhoto(@NonNull Long memberId, MultipartFile file) throws IOException {
         Objects.requireNonNull(memberId, "Member ID cannot be null");
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Le fichier photo est obligatoire");
+        }
         EquipeModel member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Membre non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membre non trouve"));
 
         Files.createDirectories(Paths.get(UPLOAD_DIR_MEMBERS));
 
+        String originalFilename = Objects.requireNonNull(file.getOriginalFilename(), "Nom de fichier invalide");
         String fileName = System.currentTimeMillis() + "_"
-                + Path.of(file.getOriginalFilename()).getFileName().toString();
+            + Path.of(originalFilename).getFileName();
         Path filePath = Paths.get(UPLOAD_DIR_MEMBERS, fileName);
 
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -218,7 +230,7 @@ public class EquipeContentService {
     public void deleteMemberPhoto(@NonNull Long memberId) throws IOException {
         Objects.requireNonNull(memberId, "Member ID cannot be null");
         EquipeModel member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Membre non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membre non trouve"));
 
         if (member.getPhotoUrl() != null) {
             deleteFileIfExists("/api/equipe/images/members/" + member.getPhotoUrl());

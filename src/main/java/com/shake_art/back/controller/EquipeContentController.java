@@ -1,5 +1,7 @@
 package com.shake_art.back.controller;
 
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -48,9 +50,9 @@ public class EquipeContentController {
     /** Récupère le contenu principal équipe (texte + url bannière) */
     @GetMapping(value = "/content", produces = "application/json")
     public ResponseEntity<EquipeContent> getContent() {
-        return service.getContent()
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        EquipeContent content = service.getContent()
+            .orElseThrow(() -> new ResourceNotFoundException("Contenu equipe introuvable"));
+        return ResponseEntity.ok(content);
     }
 
     /** Crée un nouveau contenu principal équipe */
@@ -64,7 +66,7 @@ public class EquipeContentController {
     @PutMapping("/content")
     public ResponseEntity<?> updateContent(@RequestBody EquipeContent content) {
         if (content.getId() == null) {
-            return ResponseEntity.badRequest().body("L'id du contenu est obligatoire pour la mise à jour");
+            throw new BusinessException("L'id du contenu est obligatoire pour la mise a jour");
         }
         EquipeContent updated = service.saveOrUpdate(content);
         return ResponseEntity.ok(updated);
@@ -74,9 +76,10 @@ public class EquipeContentController {
     @DeleteMapping("/content/{id}")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
         boolean deleted = service.deleteById(id);
-        if (deleted)
+        if (deleted) {
             return ResponseEntity.noContent().build();
-        return ResponseEntity.notFound().build();
+        }
+        throw new ResourceNotFoundException("Contenu equipe introuvable avec l'id " + id);
     }
 
     /**
@@ -93,7 +96,7 @@ public class EquipeContentController {
             String imageUrl = service.uploadBannerImage(file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Erreur lors de l'upload de la bannière : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload de la banniere", e);
         }
     }
 
@@ -103,8 +106,12 @@ public class EquipeContentController {
      * - supprime l'URL dans la base
      */
     @DeleteMapping("/content/delete-banner")
-    public ResponseEntity<?> deleteBanner() throws IOException {
-        service.deleteBannerImage();
+    public ResponseEntity<?> deleteBanner() {
+        try {
+            service.deleteBannerImage();
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la suppression de la banniere", e);
+        }
         return ResponseEntity.ok("Bannière supprimée avec succès");
     }
 
@@ -131,7 +138,7 @@ public class EquipeContentController {
         Objects.requireNonNull(id, "ID cannot be null");
         Objects.requireNonNull(member, "EquipeModel cannot be null");
         if (!id.equals(member.getId())) {
-            return ResponseEntity.badRequest().body("L'id du membre dans le corps ne correspond pas à l'id de l'URL");
+            throw new BusinessException("L'id du membre dans le corps ne correspond pas a l'id de l'URL");
         }
         EquipeModel updated = service.updateMember(member);
         return ResponseEntity.ok(updated);
@@ -162,7 +169,7 @@ public class EquipeContentController {
             String imageUrl = service.uploadMemberPhoto(id, file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Erreur lors de l'upload de la photo du membre : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload de la photo du membre", e);
         }
     }
 
@@ -172,9 +179,13 @@ public class EquipeContentController {
      * - supprime l'URL photo dans la base
      */
     @DeleteMapping("/members/{id}/delete-photo")
-    public ResponseEntity<?> deleteMemberPhoto(@PathVariable @NonNull Long id) throws IOException {
+    public ResponseEntity<?> deleteMemberPhoto(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
-        service.deleteMemberPhoto(id);
+        try {
+            service.deleteMemberPhoto(id);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la suppression de la photo du membre", e);
+        }
         return ResponseEntity.ok("Photo du membre supprimée avec succès");
     }
 
@@ -208,7 +219,7 @@ public class EquipeContentController {
         Path file = directory.resolve(filename);
         try {
             if (!Files.exists(file) || !Files.isReadable(file)) {
-                return ResponseEntity.notFound().build();
+                throw new ResourceNotFoundException("Image introuvable");
             }
 
             Resource resource = new UrlResource(Objects.requireNonNull(file.toUri(), "URI cannot be null"));
@@ -226,7 +237,7 @@ public class EquipeContentController {
                     .body(resource);
 
         } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
+            throw new BusinessException("Chemin d'image invalide");
         }
     }
 }

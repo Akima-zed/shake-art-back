@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -84,6 +86,14 @@ public class GlobalValidationExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "BUSINESS_ERROR", ex.getMessage(), request, Collections.emptyMap());
     }
 
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<ApiErrorResponse> handleIllegalState(
+                        IllegalStateException ex,
+                        HttpServletRequest request
+        ) {
+                return build(HttpStatus.BAD_REQUEST, "BUSINESS_ERROR", ex.getMessage(), request, Collections.emptyMap());
+        }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(
             ResourceNotFoundException ex,
@@ -107,6 +117,22 @@ public class GlobalValidationExceptionHandler {
     ) {
         return build(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Acces refuse", request, Collections.emptyMap());
     }
+
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+                        BadCredentialsException ex,
+                        HttpServletRequest request
+        ) {
+                return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Identifiants invalides", request, Collections.emptyMap());
+        }
+
+        @ExceptionHandler(AuthenticationException.class)
+        public ResponseEntity<ApiErrorResponse> handleAuthentication(
+                        AuthenticationException ex,
+                        HttpServletRequest request
+        ) {
+                return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authentification requise", request, Collections.emptyMap());
+        }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.shake_art.back.dto.EquipeDto;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.EquipeModel;
 import com.shake_art.back.service.EquipeService;
 
@@ -23,7 +24,7 @@ public class EquipeController {
     public ResponseEntity<EquipeDto> getById(@PathVariable Long id) {
         EquipeModel equipe = service.getById(id);
         if (equipe == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Equipe introuvable avec l'id " + id);
         }
         return ResponseEntity.ok(toDto(equipe));
     }
@@ -38,6 +39,9 @@ public class EquipeController {
     @PutMapping("/{id}")
     public ResponseEntity<EquipeModel> update(@PathVariable Long id, @RequestBody EquipeDto dto) {
         EquipeModel existing = service.getById(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("Equipe introuvable avec l'id " + id);
+        }
         existing.setNom(dto.getNom());
         existing.setRole(dto.getRole());
         EquipeModel updated = service.save(existing);

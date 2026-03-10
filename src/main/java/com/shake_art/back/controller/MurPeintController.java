@@ -1,12 +1,13 @@
 package com.shake_art.back.controller;
 
 import com.shake_art.back.dto.MurPeintDto;
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.MurPeint;
 import com.shake_art.back.repository.ArtisteRepository;
 import com.shake_art.back.repository.MurPeintRepository;
 import com.shake_art.back.service.ArtisteService;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -49,9 +50,9 @@ public class MurPeintController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MurPeintDto> getMurPeint(@PathVariable @NonNull Long id) {
-        Optional<MurPeint> mur = murPeintRepository.findByIdWithArtiste(id);
-        return mur.map(value -> ResponseEntity.ok(toDto(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        MurPeint mur = murPeintRepository.findByIdWithArtiste(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Mur peint introuvable avec l'id " + id));
+        return ResponseEntity.ok(toDto(mur));
     }
 
     // 📌 POST: Création d’un mur peint
@@ -60,8 +61,9 @@ public class MurPeintController {
         if (mur.getArtiste() != null && mur.getArtiste().getId() != null) {
             Long artisteId = Objects.requireNonNull(mur.getArtiste().getId(),
                     "L'identifiant de l'artiste ne peut pas être nul");
-            Optional<ArtisteModel> artiste = artisteRepository.findById(artisteId);
-            artiste.ifPresent(mur::setArtiste);
+            ArtisteModel artiste = artisteRepository.findById(artisteId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Artiste introuvable avec l'id " + artisteId));
+            mur.setArtiste(artiste);
         } else {
 
             mur.setArtiste(null);
@@ -74,26 +76,28 @@ public class MurPeintController {
     @PutMapping("/{id}")
     public ResponseEntity<MurPeintDto> update(@PathVariable @NonNull Long id, @RequestBody MurPeint murDetails) {
         Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
-        return murPeintRepository.findById(id).map(mur -> {
-            mur.setNom(murDetails.getNom());
-            mur.setLatitude(murDetails.getLatitude());
-            mur.setLongitude(murDetails.getLongitude());
-            mur.setDescription(murDetails.getDescription());
-            mur.setPhotoUrl(murDetails.getPhotoUrl());
-            mur.setAnnee(murDetails.getAnnee());
+        MurPeint mur = murPeintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mur peint introuvable avec l'id " + id));
 
-            if (murDetails.getArtiste() != null) {
-                Long artisteId = Objects.requireNonNull(murDetails.getArtiste().getId(),
-                        "L'identifiant de l'artiste ne peut pas être nul");
-                Optional<ArtisteModel> artiste = artisteRepository.findById(artisteId);
-                artiste.ifPresent(mur::setArtiste);
-            } else {
-                mur.setArtiste(null);
-            }
+        mur.setNom(murDetails.getNom());
+        mur.setLatitude(murDetails.getLatitude());
+        mur.setLongitude(murDetails.getLongitude());
+        mur.setDescription(murDetails.getDescription());
+        mur.setPhotoUrl(murDetails.getPhotoUrl());
+        mur.setAnnee(murDetails.getAnnee());
 
-            MurPeint updated = murPeintRepository.save(mur);
-            return ResponseEntity.ok(toDto(updated));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        if (murDetails.getArtiste() != null) {
+            Long artisteId = Objects.requireNonNull(murDetails.getArtiste().getId(),
+                    "L'identifiant de l'artiste ne peut pas être nul");
+            ArtisteModel artiste = artisteRepository.findById(artisteId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Artiste introuvable avec l'id " + artisteId));
+            mur.setArtiste(artiste);
+        } else {
+            mur.setArtiste(null);
+        }
+
+        MurPeint updated = murPeintRepository.save(mur);
+        return ResponseEntity.ok(toDto(updated));
     }
 
     // 📌 DELETE: Suppression d’un mur peint
@@ -101,7 +105,7 @@ public class MurPeintController {
     public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
         if (!murPeintRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Mur peint introuvable avec l'id " + id);
         }
         murPeintRepository.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -118,7 +122,7 @@ public class MurPeintController {
     public ResponseEntity<UploadResponse> uploadPhoto(@RequestParam("file") MultipartFile file) {
         Objects.requireNonNull(file, "File cannot be null");
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            throw new BusinessException("Fichier photo vide");
         }
 
         try {
@@ -141,8 +145,7 @@ public class MurPeintController {
 
             return ResponseEntity.ok(new UploadResponse(filename));
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new RuntimeException("Erreur lors de l'upload de la photo", e);
         }
     }
 
@@ -161,10 +164,10 @@ public class MurPeintController {
             Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING); // Copie le fichier
 
             return ResponseEntity.ok("Photo copiée dans le dossier fresques.");
+        } catch (NoSuchFileException e) {
+            throw new ResourceNotFoundException("Photo source introuvable dans la galerie");
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur lors de la copie du fichier : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de la copie de la photo", e);
         }
     }
 

@@ -1,5 +1,8 @@
 package com.shake_art.back.service;
 
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -76,7 +79,8 @@ public class ArtisteService {
         Objects.requireNonNull(bio, "La biographie ne peut pas être nulle");
         Objects.requireNonNull(type, "Le type ne peut pas être nul");
 
-        ArtisteModel artiste = artisteRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
+        ArtisteModel artiste = artisteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Artiste non trouve"));
 
         artiste.setName(name);
         artiste.setDiscipline(discipline);
@@ -96,7 +100,8 @@ public class ArtisteService {
 
     public void deleteArtiste(Long id) {
         Objects.requireNonNull(id, "id cannot be null");
-        ArtisteModel artiste = artisteRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
+        ArtisteModel artiste = artisteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Artiste non trouve"));
 
         // Supprime photo de profil
         if (artiste.getPhotoProfil() != null) {
@@ -118,7 +123,8 @@ public class ArtisteService {
         Objects.requireNonNull(artisteId, "artisteId cannot be null");
         Objects.requireNonNull(file, "file cannot be null");
 
-        ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
+        ArtisteModel artiste = artisteRepository.findById(artisteId)
+            .orElseThrow(() -> new ResourceNotFoundException("Artiste non trouve"));
 
         String filename = savePhoto(file, "galerie", artisteId);
         Photo photo = new Photo();
@@ -134,7 +140,8 @@ public class ArtisteService {
 
     public void deleteGalleryPhoto(Long photoId) {
         Objects.requireNonNull(photoId, "photoId cannot be null");
-        Photo photo = photoRepository.findById(photoId).orElseThrow(() -> new IllegalArgumentException("Photo non trouvée"));
+        Photo photo = photoRepository.findById(photoId)
+            .orElseThrow(() -> new ResourceNotFoundException("Photo non trouvee"));
 
         deletePhoto(photo.getFilename());
         photoRepository.deleteById(photoId);
@@ -142,8 +149,11 @@ public class ArtisteService {
 
     public byte[] getPhotoProfilData(Long artisteId) throws IOException {
         Objects.requireNonNull(artisteId, "artisteId cannot be null");
-        ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
-        if (artiste.getPhotoProfil() == null) throw new IllegalArgumentException("Photo de profil non trouvée");
+        ArtisteModel artiste = artisteRepository.findById(artisteId)
+            .orElseThrow(() -> new ResourceNotFoundException("Artiste non trouve"));
+        if (artiste.getPhotoProfil() == null) {
+            throw new ResourceNotFoundException("Photo de profil non trouvee");
+        }
 
         Path path = Paths.get("uploads", artiste.getPhotoProfil());
         return Files.readAllBytes(path);
@@ -151,8 +161,11 @@ public class ArtisteService {
 
     public String getPhotoProfilContentType(Long artisteId) throws IOException {
         Objects.requireNonNull(artisteId, "artisteId cannot be null");
-        ArtisteModel artiste = artisteRepository.findById(artisteId).orElseThrow(() -> new IllegalArgumentException("Artiste non trouvé"));
-        if (artiste.getPhotoProfil() == null) throw new IllegalArgumentException("Photo de profil non trouvée");
+        ArtisteModel artiste = artisteRepository.findById(artisteId)
+            .orElseThrow(() -> new ResourceNotFoundException("Artiste non trouve"));
+        if (artiste.getPhotoProfil() == null) {
+            throw new ResourceNotFoundException("Photo de profil non trouvee");
+        }
 
         Path path = Paths.get("uploads", artiste.getPhotoProfil());
         return Files.probeContentType(path);
@@ -167,7 +180,7 @@ public class ArtisteService {
         Path baseDir = switch (type) {
             case "profil" -> Paths.get("uploads/photos/profil");
             case "galerie" -> Paths.get("uploads/photos/galerie", String.valueOf(artisteId));
-            default -> throw new IllegalArgumentException("Type de dossier inconnu");
+            default -> throw new BusinessException("Type de dossier inconnu");
         };
 
         Files.createDirectories(baseDir);

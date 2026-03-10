@@ -50,7 +50,7 @@ public class ProgrammationController {
     public ResponseEntity<ProgrammationDto> getById(@PathVariable @NonNull Long id) {
         ProgrammationModel prog = service.getById(id);
         if (prog == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Programmation introuvable avec l'id " + id);
         }
         ProgrammationDto dto = new ProgrammationDto();
         dto.setId(prog.getId());

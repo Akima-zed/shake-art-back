@@ -2,25 +2,24 @@ package com.shake_art.back.controller;
 
 import com.shake_art.back.model.AccueilContent;
 import com.shake_art.back.model.CardPresentation;
+import com.shake_art.back.exception.BusinessException;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.repository.CardPresentationRepository;
 import com.shake_art.back.service.AccueilContentService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Optional;
 import java.util.Objects;
 
 /**
@@ -56,9 +55,9 @@ public class AccueilContentController {
     @Operation(summary = "Récupérer le contenu de la page d’accueil")
     @GetMapping
     public ResponseEntity<AccueilContent> getAccueilContent() {
-        return service.getContent()
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        AccueilContent content = service.getContent()
+            .orElseThrow(() -> new ResourceNotFoundException("Contenu d'accueil introuvable"));
+        return ResponseEntity.ok(content);
     }
 
     /**
@@ -81,29 +80,28 @@ public class AccueilContentController {
     @PostMapping("/upload-video")
     public ResponseEntity<String> uploadHeroVideo(@RequestParam("video") MultipartFile video) {
         if (video.isEmpty()) {
-            return ResponseEntity.badRequest().body("Fichier vidéo manquant");
+            throw new BusinessException("Fichier video manquant");
         }
 
         try {
             // Création du dossier upload vidéos s'il n'existe pas
-            File dir = new File(UPLOAD_DIR_VIDEOS);
-            if (!dir.exists()) dir.mkdirs();
+            Path uploadPath = Paths.get(UPLOAD_DIR_VIDEOS);
+            Files.createDirectories(uploadPath);
 
             // Génération du nom de fichier unique
-            String fileName = System.currentTimeMillis() + "_" + Path.of(video.getOriginalFilename()).getFileName().toString();
-            File destination = new File(dir, fileName);
+            String originalFilename = Objects.requireNonNull(video.getOriginalFilename(), "Nom de fichier invalide");
+            String fileName = System.currentTimeMillis() + "_" + Path.of(originalFilename).getFileName();
+            Path destination = uploadPath.resolve(fileName);
 
             // Sauvegarde physique du fichier
-            video.transferTo(destination);
+            video.transferTo(destination.toFile());
 
             // URL relative accessible via serveur web
             String fileUrl = "/" + UPLOAD_DIR_VIDEOS + "/" + fileName;
             return ResponseEntity.ok(fileUrl);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur serveur : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload de la video", e);
         }
     }
     /**
@@ -123,12 +121,12 @@ public class AccueilContentController {
         try {
             // Vérifie que le fichier n'est pas vide
             if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Fichier vide");
+                throw new BusinessException("Fichier vide");
             }
 
             // Recherche la carte concernée
             CardPresentation card = cardRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Carte non trouvée"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Carte non trouvee"));
 
             // Crée le dossier d'upload s'il n'existe pas
             Path uploadPath = Paths.get(UPLOAD_DIR_CARDS);
@@ -157,25 +155,18 @@ public class AccueilContentController {
             return ResponseEntity.ok(fullImageUrl);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur serveur");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload de l'image de carte", e);
         }
     }
 
     @Operation(summary = "Créer une nouvelle carte")
     @PostMapping("/cards")
     public ResponseEntity<CardPresentation> createCard(@RequestBody CardPresentation card) {
-        Optional<AccueilContent> optional = service.getContent();
-        if (optional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        AccueilContent content = optional.get();
+        AccueilContent content = service.getContent()
+                .orElseThrow(() -> new ResourceNotFoundException("Contenu d'accueil introuvable"));
         card.setAccueilContent(content);
         CardPresentation saved = cardRepository.save(card);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(201).body(saved);
     }
 
 
