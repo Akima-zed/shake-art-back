@@ -2,6 +2,7 @@ package com.shake_art.back.controller;
 
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
+import com.shake_art.back.exception.TechnicalException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -96,7 +97,7 @@ public class EquipeContentController {
             String imageUrl = service.uploadBannerImage(file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload de la banniere", e);
+            throw new TechnicalException("Erreur lors de l'upload de la banniere", e);
         }
     }
 
@@ -110,7 +111,7 @@ public class EquipeContentController {
         try {
             service.deleteBannerImage();
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de la suppression de la banniere", e);
+            throw new TechnicalException("Erreur lors de la suppression de la banniere", e);
         }
         return ResponseEntity.ok("Bannière supprimée avec succès");
     }
@@ -169,7 +170,7 @@ public class EquipeContentController {
             String imageUrl = service.uploadMemberPhoto(id, file);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload de la photo du membre", e);
+            throw new TechnicalException("Erreur lors de l'upload de la photo du membre", e);
         }
     }
 
@@ -184,7 +185,7 @@ public class EquipeContentController {
         try {
             service.deleteMemberPhoto(id);
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de la suppression de la photo du membre", e);
+            throw new TechnicalException("Erreur lors de la suppression de la photo du membre", e);
         }
         return ResponseEntity.ok("Photo du membre supprimée avec succès");
     }

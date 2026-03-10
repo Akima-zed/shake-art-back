@@ -117,6 +117,14 @@ public class GlobalValidationExceptionHandler {
                 return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Ressource introuvable", request, Collections.emptyMap());
         }
 
+        @ExceptionHandler(TechnicalException.class)
+        public ResponseEntity<ApiErrorResponse> handleTechnical(
+                        TechnicalException ex,
+                        HttpServletRequest request
+        ) {
+                return build(HttpStatus.INTERNAL_SERVER_ERROR, "TECHNICAL_ERROR", "Une erreur technique est survenue", request, Collections.emptyMap());
+        }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
             AccessDeniedException ex,

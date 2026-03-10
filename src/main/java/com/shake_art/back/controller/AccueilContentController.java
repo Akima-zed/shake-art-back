@@ -4,6 +4,7 @@ import com.shake_art.back.model.AccueilContent;
 import com.shake_art.back.model.CardPresentation;
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
+import com.shake_art.back.exception.TechnicalException;
 import com.shake_art.back.repository.CardPresentationRepository;
 import com.shake_art.back.service.AccueilContentService;
 
@@ -101,7 +102,7 @@ public class AccueilContentController {
             return ResponseEntity.ok(fileUrl);
 
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload de la video", e);
+            throw new TechnicalException("Erreur lors de l'upload de la video", e);
         }
     }
     /**
@@ -155,7 +156,7 @@ public class AccueilContentController {
             return ResponseEntity.ok(fullImageUrl);
 
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload de l'image de carte", e);
+            throw new TechnicalException("Erreur lors de l'upload de l'image de carte", e);
         }
     }
 

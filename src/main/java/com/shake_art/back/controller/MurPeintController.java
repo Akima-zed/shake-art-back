@@ -3,6 +3,7 @@ package com.shake_art.back.controller;
 import com.shake_art.back.dto.MurPeintDto;
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
+import com.shake_art.back.exception.TechnicalException;
 import com.shake_art.back.model.MurPeint;
 import com.shake_art.back.repository.ArtisteRepository;
 import com.shake_art.back.repository.MurPeintRepository;
@@ -145,7 +146,7 @@ public class MurPeintController {
 
             return ResponseEntity.ok(new UploadResponse(filename));
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload de la photo", e);
+            throw new TechnicalException("Erreur lors de l'upload de la photo", e);
         }
     }
 
@@ -167,7 +168,7 @@ public class MurPeintController {
         } catch (NoSuchFileException e) {
             throw new ResourceNotFoundException("Photo source introuvable dans la galerie");
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de la copie de la photo", e);
+            throw new TechnicalException("Erreur lors de la copie de la photo", e);
         }
     }
 
