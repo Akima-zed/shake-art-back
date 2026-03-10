@@ -1,11 +1,12 @@
 package com.shake_art.back.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shake_art.back.exception.ApiErrorResponse;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,8 +53,16 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.getWriter().write("{\"error\":\"Acces refuse\"}");
+                        response.setContentType("application/json");
+                        ApiErrorResponse payload = new ApiErrorResponse(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Forbidden",
+                            "ACCESS_DENIED",
+                            "Acces refuse",
+                            request.getRequestURI(),
+                            java.util.Collections.emptyMap()
+                        );
+                        objectMapper.writeValue(response.getWriter(), payload);
                         })
                 )
                 .authenticationProvider(authenticationProvider())

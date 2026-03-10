@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.shake_art.back.dto.ActiviteDto;
 import com.shake_art.back.dto.ProgrammationDto;
+import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.model.ActiviteModel;
 import com.shake_art.back.model.ProgrammationModel;
 import com.shake_art.back.repository.ActiviteRepository;
@@ -101,7 +102,7 @@ public class ProgrammationController {
     public ResponseEntity<Void> deleteActivite(@PathVariable @NonNull Long programmationId,
             @PathVariable @NonNull Long activiteId) {
         ProgrammationModel prog = programmationRepository.findById(programmationId)
-                .orElseThrow(() -> new RuntimeException("Programmation introuvable avec l'id " + programmationId));
+            .orElseThrow(() -> new ResourceNotFoundException("Programmation introuvable avec l'id " + programmationId));
 
         boolean removed = prog.getActivites().removeIf(a -> a.getId() != null && a.getId().equals(activiteId));
 
@@ -138,7 +139,7 @@ public class ProgrammationController {
         Objects.requireNonNull(id, "ID cannot be null");
         Objects.requireNonNull(dto, "ActiviteDto cannot be null");
         ActiviteModel activite = activiteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id : " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Activite non trouvee avec l'id : " + id));
 
         activite.setName(Objects.requireNonNull(dto.getName(), "Name cannot be null"));
         activite.setType(Objects.requireNonNull(dto.getType(), "Type cannot be null"));
