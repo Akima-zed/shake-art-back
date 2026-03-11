@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -66,8 +67,9 @@ public class AccueilContentController {
      * @param content contenu mis à jour
      * @return contenu sauvegardé
      */
-    @Operation(summary = "Mettre à jour le contenu de la page d’accueil")
+    @Operation(summary = "Mettre à jour le contenu de la page d’accueil", description = "Met a jour les textes et donnees de la page d'accueil. Necessite ROLE_ADMIN.")
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AccueilContent> updateAccueilContent(@RequestBody AccueilContent content) {
         return ResponseEntity.ok(service.saveContent(content));
     }
@@ -77,8 +79,9 @@ public class AccueilContentController {
      * @param video fichier vidéo envoyé (clé 'video')
      * @return URL publique de la vidéo ou message d’erreur
      */
-    @Operation(summary = "Uploader une vidéo pour la section hero")
+    @Operation(summary = "Uploader une vidéo pour la section hero", description = "Charge une nouvelle video hero et retourne son URL publique. Necessite ROLE_ADMIN.")
     @PostMapping("/upload-video")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadHeroVideo(@RequestParam("video") MultipartFile video) {
         if (video.isEmpty()) {
             throw new BusinessException("Fichier video manquant");
@@ -111,8 +114,9 @@ public class AccueilContentController {
      * @param file fichier image (clé 'file' obligatoire)
      * @return URL publique de l'image sauvegardée ou message d'erreur
      */
-    @Operation(summary = "Uploader une image pour une carte spécifique")
+    @Operation(summary = "Uploader une image pour une carte spécifique", description = "Associe une image a une carte de presentation. Necessite ROLE_ADMIN.")
     @PostMapping("/cards/{id}/image")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadCardImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
@@ -160,8 +164,9 @@ public class AccueilContentController {
         }
     }
 
-    @Operation(summary = "Créer une nouvelle carte")
+    @Operation(summary = "Créer une nouvelle carte", description = "Cree une nouvelle carte de presentation sur la page d'accueil. Necessite ROLE_ADMIN.")
     @PostMapping("/cards")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CardPresentation> createCard(@RequestBody CardPresentation card) {
         AccueilContent content = service.getContent()
                 .orElseThrow(() -> new ResourceNotFoundException("Contenu d'accueil introuvable"));

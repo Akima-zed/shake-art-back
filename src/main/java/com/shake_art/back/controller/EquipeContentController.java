@@ -3,12 +3,15 @@ package com.shake_art.back.controller;
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.exception.TechnicalException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.lang.NonNull;
@@ -37,6 +40,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("equipe")
 @CrossOrigin(origins = "*") // À restreindre en production pour la sécurité
+@Tag(name = "Equipe", description = "Gestion du contenu de la page equipe et des membres")
 public class EquipeContentController {
 
     @Autowired
@@ -57,14 +61,18 @@ public class EquipeContentController {
     }
 
     /** Crée un nouveau contenu principal équipe */
+    @Operation(summary = "Creer le contenu equipe", description = "Cree le contenu principal de la page equipe. Necessite ROLE_ADMIN.")
     @PostMapping("/content")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EquipeContent> createContent(@RequestBody EquipeContent content) {
         EquipeContent saved = service.saveOrUpdate(content);
         return ResponseEntity.status(201).body(saved);
     }
 
     /** Met à jour un contenu principal équipe existant */
+    @Operation(summary = "Mettre a jour le contenu equipe", description = "Met a jour le contenu principal de la page equipe. Necessite ROLE_ADMIN.")
     @PutMapping("/content")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateContent(@RequestBody EquipeContent content) {
         if (content.getId() == null) {
             throw new BusinessException("L'id du contenu est obligatoire pour la mise a jour");
@@ -74,7 +82,9 @@ public class EquipeContentController {
     }
 
     /** Supprime un contenu principal par son ID */
+    @Operation(summary = "Supprimer le contenu equipe", description = "Supprime le contenu principal par son identifiant. Necessite ROLE_ADMIN.")
     @DeleteMapping("/content/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
         boolean deleted = service.deleteById(id);
         if (deleted) {
@@ -91,6 +101,8 @@ public class EquipeContentController {
      * @return URL publique (endpoint) pour accéder à cette image
      */
     @PostMapping("/content/upload-banner")
+    @Operation(summary = "Uploader la banniere equipe", description = "Charge une nouvelle image de banniere pour la page equipe. Necessite ROLE_ADMIN.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadBanner(@RequestParam("file") MultipartFile file) {
         try {
             // Upload physique + mise à jour url dans la base
@@ -107,6 +119,8 @@ public class EquipeContentController {
      * - supprime l'URL dans la base
      */
     @DeleteMapping("/content/delete-banner")
+    @Operation(summary = "Supprimer la banniere equipe", description = "Supprime l'image de banniere actuelle de la page equipe. Necessite ROLE_ADMIN.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteBanner() {
         try {
             service.deleteBannerImage();
@@ -126,7 +140,9 @@ public class EquipeContentController {
     }
 
     /** Ajoute un nouveau membre */
+    @Operation(summary = "Ajouter un membre", description = "Ajoute un membre a l'equipe. Necessite ROLE_ADMIN.")
     @PostMapping("/members")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EquipeModel> addMember(@RequestBody @NonNull EquipeModel member) {
         Objects.requireNonNull(member, "EquipeModel cannot be null");
         EquipeModel saved = service.addMember(member);
@@ -134,7 +150,9 @@ public class EquipeContentController {
     }
 
     /** Met à jour un membre existant */
+    @Operation(summary = "Mettre a jour un membre", description = "Met a jour les informations d'un membre de l'equipe. Necessite ROLE_ADMIN.")
     @PutMapping("/members/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateMember(@PathVariable @NonNull Long id, @RequestBody @NonNull EquipeModel member) {
         Objects.requireNonNull(id, "ID cannot be null");
         Objects.requireNonNull(member, "EquipeModel cannot be null");
@@ -146,7 +164,9 @@ public class EquipeContentController {
     }
 
     /** Supprime un membre par son ID */
+    @Operation(summary = "Supprimer un membre", description = "Supprime un membre de l'equipe. Necessite ROLE_ADMIN.")
     @DeleteMapping("/members/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMember(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
         service.deleteMember(id);
@@ -163,6 +183,8 @@ public class EquipeContentController {
      * @return URL publique d'accès à la photo uploadée
      */
     @PostMapping("/members/{id}/upload-photo")
+    @Operation(summary = "Uploader la photo d'un membre", description = "Charge une photo pour un membre et met a jour son URL. Necessite ROLE_ADMIN.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadMemberPhoto(@PathVariable @NonNull Long id,
             @RequestParam("file") MultipartFile file) {
         Objects.requireNonNull(id, "ID cannot be null");
@@ -180,6 +202,8 @@ public class EquipeContentController {
      * - supprime l'URL photo dans la base
      */
     @DeleteMapping("/members/{id}/delete-photo")
+    @Operation(summary = "Supprimer la photo d'un membre", description = "Supprime la photo associee a un membre. Necessite ROLE_ADMIN.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteMemberPhoto(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
         try {

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,8 +29,9 @@ public class PartenaireController {
     @Autowired
     private PartenaireService partenaireService;
 
-    @Operation(summary = "Créer un partenaire", description = "Ajoute un nouveau partenaire avec un logo optionnel.")
+    @Operation(summary = "Créer un partenaire", description = "Ajoute un nouveau partenaire avec un logo optionnel. Necessite ROLE_ADMIN.")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Partenaire> create(
             @Parameter(description = "Nom du partenaire", required = true) @RequestParam String nom,
 
@@ -59,8 +61,9 @@ public class PartenaireController {
         return ResponseEntity.ok(partenaire);
     }
 
-    @Operation(summary = "Met à jour un partenaire existant", description = "Modifie les informations du partenaire, y compris le logo.")
+    @Operation(summary = "Met à jour un partenaire existant", description = "Modifie les informations du partenaire, y compris le logo. Necessite ROLE_ADMIN.")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Partenaire> update(
             @Parameter(description = "ID du partenaire à mettre à jour", required = true) @PathVariable @NonNull Long id,
 
@@ -77,8 +80,9 @@ public class PartenaireController {
         return ResponseEntity.ok(p);
     }
 
-    @Operation(summary = "Supprime un partenaire par son ID")
+    @Operation(summary = "Supprime un partenaire par son ID", description = "Supprime un partenaire et son logo associe. Necessite ROLE_ADMIN.")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID du partenaire à supprimer", required = true) @PathVariable @NonNull Long id) {
         id = Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
@@ -94,8 +98,9 @@ public class PartenaireController {
         return ResponseEntity.ok(partenaireService.getContent());
     }
 
-    @Operation(summary = "Met à jour le contenu éditable de la page partenaires")
+    @Operation(summary = "Met à jour le contenu éditable de la page partenaires", description = "Met a jour le titre/texte de la section partenaires. Necessite ROLE_ADMIN.")
     @PutMapping("/content")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PartenaireContent> updateContent(@RequestBody PartenaireContent content) {
         return ResponseEntity.ok(partenaireService.updateContent(content));
     }

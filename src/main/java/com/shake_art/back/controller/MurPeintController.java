@@ -15,6 +15,7 @@ import com.shake_art.back.repository.MurPeintRepository;
 import com.shake_art.back.service.ArtisteService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,8 +71,9 @@ public class MurPeintController {
         return ResponseEntity.ok(toDto(mur));
     }
     @Operation(summary = "Creer un mur peint",
-        description = "Ajoute un nouveau mur peint avec ses coordonnees GPS et l'artiste associe.")    // 📌 POST: Création d’un mur peint
+        description = "Ajoute un nouveau mur peint avec ses coordonnees GPS et l'artiste associe. Necessite ROLE_ADMIN.")    // 📌 POST: Création d’un mur peint
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MurPeintDto> create(@RequestBody MurPeint mur) {
         if (mur.getArtiste() != null && mur.getArtiste().getId() != null) {
             Long artisteId = Objects.requireNonNull(mur.getArtiste().getId(),
@@ -87,8 +89,11 @@ public class MurPeintController {
         return ResponseEntity.ok(toDto(saved));
     }
 
+    @Operation(summary = "Mettre a jour un mur peint",
+        description = "Met a jour les informations d'un mur peint existant. Necessite ROLE_ADMIN.")
     // 📌 PUT: Mise à jour d’un mur peint
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MurPeintDto> update(@PathVariable @NonNull Long id, @RequestBody MurPeint murDetails) {
         Objects.requireNonNull(id, "L'identifiant ne peut pas être nul");
         MurPeint mur = murPeintRepository.findById(id)
@@ -115,8 +120,11 @@ public class MurPeintController {
         return ResponseEntity.ok(toDto(updated));
     }
 
+    @Operation(summary = "Supprimer un mur peint",
+        description = "Supprime un mur peint de la carte. Necessite ROLE_ADMIN.")
     // 📌 DELETE: Suppression d’un mur peint
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
         if (!murPeintRepository.existsById(id)) {
@@ -132,8 +140,9 @@ public class MurPeintController {
         return "API murs OK";
     }
     @Operation(summary = "Uploader une photo de fresque",
-        description = "Upload un fichier image pour un mur peint. Retourne l'URL publique du fichier sauvegarde.")    // 📌 POST: Upload manuel d’une photo de fresque
+        description = "Upload un fichier image pour un mur peint. Retourne l'URL publique du fichier sauvegarde. Necessite ROLE_ADMIN.")    // 📌 POST: Upload manuel d’une photo de fresque
     @PostMapping("/upload-photo")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UploadResponse> uploadPhoto(@RequestParam("file") MultipartFile file) {
         Objects.requireNonNull(file, "File cannot be null");
         if (file.isEmpty()) {
@@ -164,8 +173,11 @@ public class MurPeintController {
         }
     }
 
+    @Operation(summary = "Valider une photo depuis la galerie",
+        description = "Copie une photo depuis la galerie vers le dossier des fresques pour publication. Necessite ROLE_ADMIN.")
     // POST: Copier une photo depuis la galerie vers le dossier des fresques
     @PostMapping("/{id}/valider-photo")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable @NonNull Long id,
             @RequestBody String nomFichier) {
         Objects.requireNonNull(id, "ID cannot be null");

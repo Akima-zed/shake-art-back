@@ -74,6 +74,10 @@ La documentation interactive est disponible sur :
 5. Coller le token dans le champ `bearerAuth` (sans prefixe "Bearer").
 6. Tous les endpoints proteges sont maintenant accessibles.
 
+Note : les endpoints d'ecriture affichent explicitement dans Swagger la mention
+"Necessite ROLE_ADMIN" dans leur description metier, pour faciliter la lecture
+fonctionnelle et securitaire.
+
 ### Roles et acces
 
 | Role         | Acces                                                                             |
