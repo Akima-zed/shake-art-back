@@ -59,21 +59,28 @@ public class ReservationController {
     }
 
     @Operation(summary = "Valider une reservation",
-        description = "Marque une reservation comme validee (confirmee par l'organisateur).")
+        description = "Marque une reservation comme validee (confirmee par l'organisateur). Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}/valider")
+    @PreAuthorize("hasRole('ADMIN')")
     public ReservationModel valider(@PathVariable @NonNull Long id) {
         return service.validateReservation(id);
     }
 
-    @Operation(summary = "Supprimer une reservation")
+    @Operation(summary = "Supprimer une reservation",
+        description = "Supprime definitivement une reservation. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void supprimer(@PathVariable @NonNull Long id) {
         service.delete(id);
     }
 
     @Operation(summary = "Suspendre ou reactiver une reservation",
-        description = "Permet de suspendre ou de lever la suspension d'une reservation (ex: surreservation, incident).")
+        description = "Permet de suspendre ou de lever la suspension d'une reservation (ex: surreservation, incident). Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}/suspendre")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> suspendre(@PathVariable @NonNull Long id, @Valid @RequestBody SuspendRequest request) {
         ReservationModel updated = service.suspendreReservation(id, request.isSuspendue());
         return ResponseEntity.ok(updated);

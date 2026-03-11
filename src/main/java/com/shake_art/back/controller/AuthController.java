@@ -2,6 +2,7 @@ package com.shake_art.back.controller;
 
 import com.shake_art.back.dto.LoginRequest;
 import com.shake_art.back.dto.LoginResponse;
+import com.shake_art.back.exception.ApiErrorResponse;
 import com.shake_art.back.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,9 +35,9 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Connexion reussie - token JWT retourne",
             content = @Content(schema = @Schema(implementation = LoginResponse.class))),
         @ApiResponse(responseCode = "400", description = "Email ou mot de passe invalide (format incorrect)",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ApiErrorResponse"))),
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
         @ApiResponse(responseCode = "401", description = "Identifiants incorrects",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ApiErrorResponse")))
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {

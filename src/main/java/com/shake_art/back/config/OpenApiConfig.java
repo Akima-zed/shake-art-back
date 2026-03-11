@@ -1,5 +1,6 @@
 package com.shake_art.back.config;
 
+import com.shake_art.back.exception.ApiErrorResponse;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -40,10 +41,10 @@ public class OpenApiConfig {
             .info(new Info()
                 .title("Shake Art Back API")
                 .version("v1")
-                .description("API backoffice du festival Shake Art.\\n\\n" +
-                    "Roles metier:\\n" +
-                    "- ROLE_ADMIN : administration et endpoints proteges backoffice\\n" +
-                    "- ROLE_USER : role utilisateur authentifie (aucun endpoint dedie a ce role pour le moment)")
+                .description("API backoffice du festival Shake Art.\n\n" +
+                    "Roles metier:\n" +
+                    "- ROLE_ADMIN : administration et endpoints proteges backoffice\n" +
+                    "- ROLE_USER : lecture authentifiee (programmation par id/annee, reservations)")
                 .contact(new Contact().name("Equipe Shake Art"))
                 .license(new License().name("Proprietary")))
             .components(new Components().addSecuritySchemes(
@@ -63,9 +64,11 @@ public class OpenApiConfig {
     public OperationCustomizer documentSecurityAndResponses() {
         return (operation, handlerMethod) -> {
             Set<String> roles = extractRequiredRoles(handlerMethod);
-            String tag = resolveTag(handlerMethod);
 
-            operation.setTags(java.util.List.of(tag));
+            // N'appliquer le tag de fallback que si springdoc n'en a pas deja defini via @Tag
+            if (operation.getTags() == null || operation.getTags().isEmpty()) {
+                operation.setTags(java.util.List.of(resolveTag(handlerMethod)));
+            }
 
             if (operation.getSummary() == null || operation.getSummary().isBlank()) {
                 operation.setSummary(humanizeMethodName(handlerMethod.getMethod().getName()));
@@ -147,7 +150,17 @@ public class OpenApiConfig {
             return;
         }
 
-        responses.computeIfAbsent("200", code -> new ApiResponse().description("Requete traitee avec succes"));
+        // Description du 200 adaptee au verbe HTTP
+        String desc200;
+        if (method.getAnnotation(GetMapping.class) != null) {
+            desc200 = "Donnees recuperees avec succes";
+        } else if (method.getAnnotation(PutMapping.class) != null || method.getAnnotation(PatchMapping.class) != null) {
+            desc200 = "Ressource mise a jour avec succes";
+        } else {
+            desc200 = "Requete traitee avec succes";
+        }
+        responses.computeIfAbsent("200", code -> new ApiResponse().description(desc200));
+
         responses.computeIfAbsent("400", code -> new ApiResponse().description("Requete invalide (erreur de validation ou format)"));
         responses.computeIfAbsent("404", code -> new ApiResponse().description("Ressource non trouvee"));
         responses.computeIfAbsent("500", code -> new ApiResponse().description("Erreur interne du serveur"));
@@ -162,12 +175,6 @@ public class OpenApiConfig {
         }
         if (method.getAnnotation(DeleteMapping.class) != null) {
             responses.computeIfAbsent("204", code -> new ApiResponse().description("Ressource supprimee"));
-        }
-        if (method.getAnnotation(PutMapping.class) != null || method.getAnnotation(PatchMapping.class) != null) {
-            responses.computeIfAbsent("200", code -> new ApiResponse().description("Ressource mise a jour"));
-        }
-        if (method.getAnnotation(GetMapping.class) != null) {
-            responses.computeIfAbsent("200", code -> new ApiResponse().description("Donnees recuperees avec succes"));
         }
     }
 }

@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,34 +38,34 @@ class ValidationIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService;
 
-    @MockBean
+    @MockitoBean
     private ProgrammationService programmationService;
 
-    @MockBean
+    @MockitoBean
     private ProgrammationRepository programmationRepository;
 
-    @MockBean
+    @MockitoBean
     private ActiviteRepository activiteRepository;
 
-    @MockBean
+    @MockitoBean
     private AdminService adminService;
 
-    @MockBean
+    @MockitoBean
     private ReservationService reservationService;
 
-    @MockBean
+    @MockitoBean
     private EmailService emailService;
 
-        @MockBean
+        @MockitoBean
         private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        @MockBean
+        @MockitoBean
         private CustomUserDetailsService customUserDetailsService;
 
-        @MockBean
+        @MockitoBean
         private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     @Test

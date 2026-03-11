@@ -99,6 +99,7 @@ public class ProgrammationController {
     })
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<ProgrammationModel> create(@Valid @RequestBody ProgrammationDto dto) {
         ProgrammationModel model = dtoToModel(dto);
@@ -111,6 +112,7 @@ public class ProgrammationController {
         description = "Modifie un jour de programmation existant. Necessite ROLE_ADMIN.")
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id,
             @Valid @RequestBody ProgrammationDto dto) {
@@ -130,7 +132,11 @@ public class ProgrammationController {
         return ResponseEntity.ok(updated);
     }
 
+    @Operation(summary = "Supprimer une activite d'une programmation",
+        description = "Retire une activite d'un jour de programmation. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{programmationId}/activites/{activiteId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<Void> deleteActivite(@PathVariable @NonNull Long programmationId,
             @PathVariable @NonNull Long activiteId) {
@@ -147,18 +153,22 @@ public class ProgrammationController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Supprimer une programmation par date",
+        description = "Supprime tous les jours de programmation correspondant a une date. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/date/{date}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<?> deleteByDate(@PathVariable String date) {
         service.deleteByDate(date);
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Création d'une activité indépendante (rarement utilisé, préférer via
-     * programmation).
-     */
+    @Operation(summary = "Creer une activite independante",
+        description = "Ajoute une activite non rattachee a un jour. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/activites")
+    @PreAuthorize("hasRole('ADMIN')")
     public ActiviteModel createActivite(@Valid @RequestBody ActiviteDto dto) {
         Objects.requireNonNull(dto, "ActiviteDto cannot be null");
         ActiviteModel activite = Objects.requireNonNull(dtoToModelActivite(dto),
@@ -166,8 +176,11 @@ public class ProgrammationController {
         return activiteRepository.save(activite);
     }
 
-    /** Mise à jour d'une activité indépendante. */
+    @Operation(summary = "Mettre a jour une activite",
+        description = "Modifie le contenu d'une activite existante. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/activites/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ActiviteModel updateActivite(@PathVariable @NonNull Long id, @Valid @RequestBody ActiviteDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         Objects.requireNonNull(dto, "ActiviteDto cannot be null");
