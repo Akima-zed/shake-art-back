@@ -1,5 +1,10 @@
 package com.shake_art.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.shake_art.back.dto.MurPeintDto;
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
@@ -27,6 +32,7 @@ import com.shake_art.back.model.ArtisteModel;
 @RestController
 @RequestMapping("/murs")
 @CrossOrigin("*")
+@Tag(name = "Murs Peints", description = "Carte des murs peints du festival avec geolocalisation")
 public class MurPeintController {
 
     private static final String UPLOAD_DIR = "uploads/photos/fresques"; // Dossier de destination des fresques
@@ -42,21 +48,29 @@ public class MurPeintController {
         this.artisteRepository = artisteRepository;
     }
 
-    // 📌 GET: Tous les murs ou par année
+    @Operation(summary = "Liste tous les murs peints",
+        description = "Retourne tous les murs peints, filtrable par annee via le parametre `annee`. Acces public.")
+    @ApiResponse(responseCode = "200", description = "Liste des murs peints retournee")
     @GetMapping
     public List<MurPeintDto> getAll(@RequestParam(required = false) Integer annee) {
         List<MurPeint> murs = (annee != null) ? murPeintRepository.findByAnnee(annee) : murPeintRepository.findAll();
         return murs.stream().map(this::toDto).toList();
     }
 
+    @Operation(summary = "Detail d'un mur peint",
+        description = "Retourne les informations completes d'un mur peint, incluant l'artiste associe. Acces public.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Mur peint trouve"),
+        @ApiResponse(responseCode = "404", description = "Mur peint introuvable")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<MurPeintDto> getMurPeint(@PathVariable @NonNull Long id) {
         MurPeint mur = murPeintRepository.findByIdWithArtiste(id)
             .orElseThrow(() -> new ResourceNotFoundException("Mur peint introuvable avec l'id " + id));
         return ResponseEntity.ok(toDto(mur));
     }
-
-    // 📌 POST: Création d’un mur peint
+    @Operation(summary = "Creer un mur peint",
+        description = "Ajoute un nouveau mur peint avec ses coordonnees GPS et l'artiste associe.")    // 📌 POST: Création d’un mur peint
     @PostMapping
     public ResponseEntity<MurPeintDto> create(@RequestBody MurPeint mur) {
         if (mur.getArtiste() != null && mur.getArtiste().getId() != null) {
@@ -117,8 +131,8 @@ public class MurPeintController {
     public String test() {
         return "API murs OK";
     }
-
-    // 📌 POST: Upload manuel d’une photo de fresque
+    @Operation(summary = "Uploader une photo de fresque",
+        description = "Upload un fichier image pour un mur peint. Retourne l'URL publique du fichier sauvegarde.")    // 📌 POST: Upload manuel d’une photo de fresque
     @PostMapping("/upload-photo")
     public ResponseEntity<UploadResponse> uploadPhoto(@RequestParam("file") MultipartFile file) {
         Objects.requireNonNull(file, "File cannot be null");

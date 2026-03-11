@@ -1,7 +1,13 @@
 package com.shake_art.back.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +31,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/programmation")
 @CrossOrigin("*")
+@Tag(name = "Programmation", description = "Gestion du programme du festival (jours, activites, intervenants)")
 public class ProgrammationController {
 
     private final ProgrammationService service;
@@ -39,14 +46,24 @@ public class ProgrammationController {
         this.activiteRepository = activiteRepository;
     }
 
-    /** Retourne toutes les programmations (entités complètes). */
+    @Operation(summary = "Liste toutes les programmations",
+        description = "Retourne l'ensemble des jours de programmation avec leurs activites. Acces public.")
+    @ApiResponse(responseCode = "200", description = "Liste des programmations retournee")
     @GetMapping
     public List<ProgrammationDto> getAll() {
         return service.getAllDto();
     }
 
-    /** Retourne une programmation par son ID. */
+    @Operation(summary = "Recuperer une programmation par ID",
+        description = "Retourne le detail d'un jour de programmation avec ses activites. Necessite ROLE_USER ou ROLE_ADMIN.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Programmation trouvee"),
+        @ApiResponse(responseCode = "401", description = "Token JWT manquant ou invalide"),
+        @ApiResponse(responseCode = "404", description = "Programmation introuvable")
+    })
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<ProgrammationDto> getById(@PathVariable @NonNull Long id) {
         ProgrammationModel prog = service.getById(id);
         if (prog == null) {
@@ -63,13 +80,24 @@ public class ProgrammationController {
         return ResponseEntity.ok(dto);
     }
 
-    /** Retourne les programmations d'une année donnée. */
+    @Operation(summary = "Programmations par annee",
+        description = "Filtre les jours de programmation par annee (ex: 2025). Necessite ROLE_USER ou ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/annee/{annee}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<ProgrammationModel> getByAnnee(@PathVariable @NonNull Integer annee) {
         return service.getByAnnee(annee);
     }
 
-    /** Création d'une programmation depuis un DTO JSON. */
+    @Operation(summary = "Creer une programmation",
+        description = "Cree un nouveau jour de programmation avec ses activites. Necessite ROLE_ADMIN.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Programmation creee"),
+        @ApiResponse(responseCode = "400", description = "Donnees invalides"),
+        @ApiResponse(responseCode = "401", description = "Token JWT manquant ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Role ADMIN requis")
+    })
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = "application/json", produces = "application/json")
     @Transactional
     public ResponseEntity<ProgrammationModel> create(@Valid @RequestBody ProgrammationDto dto) {
@@ -79,7 +107,9 @@ public class ProgrammationController {
         return ResponseEntity.ok(saved);
     }
 
-    /** Mise à jour d'une programmation existante depuis un DTO JSON. */
+    @Operation(summary = "Mettre a jour une programmation",
+        description = "Modifie un jour de programmation existant. Necessite ROLE_ADMIN.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Transactional
     public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id,
