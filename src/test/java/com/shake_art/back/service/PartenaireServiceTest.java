@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class PartenaireServiceTest {
@@ -87,6 +88,53 @@ class PartenaireServiceTest {
         service.delete(2L);
 
         verify(partenaireRepository).deleteById(2L);
+    }
+
+    @Test
+    void delete_avecLogo_tenteSuppressionFichierPuisEntite() {
+        Partenaire partenaire = new Partenaire();
+        partenaire.setNom("P");
+        partenaire.setLogo("logos/missing.jpg");
+        when(partenaireRepository.findById(4L)).thenReturn(Optional.of(partenaire));
+
+        service.delete(4L);
+
+        verify(partenaireRepository).deleteById(4L);
+    }
+
+    @Test
+    void update_avecLogoMetAJour_cheminLogo() throws IOException {
+        Partenaire existing = new Partenaire();
+        existing.setNom("Old");
+        existing.setDescription("Old");
+        existing.setLogo(null);
+
+        when(partenaireRepository.findById(8L)).thenReturn(Optional.of(existing));
+        when(partenaireRepository.save(any(Partenaire.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MockMultipartFile logo = new MockMultipartFile("logo", "new.png", "image/png", "img".getBytes());
+
+        Partenaire updated = service.update(8L, "New", "Desc", "https://new.example", logo);
+
+        assertEquals("New", updated.getNom());
+        assertTrue(updated.getLogo().startsWith("logos/"));
+        Files.deleteIfExists(Path.of("uploads", updated.getLogo()));
+    }
+
+    @Test
+    void getAll_etGetOne_relayantRepository() {
+        Partenaire partenaire = new Partenaire();
+        when(partenaireRepository.findAll()).thenReturn(List.of(partenaire));
+        when(partenaireRepository.findById(1L)).thenReturn(Optional.of(partenaire));
+
+        assertEquals(1, service.getAll().size());
+        assertTrue(service.getOne(1L).isPresent());
+    }
+
+    @Test
+    void getOne_lanceNpe_siIdNull() {
+        assertThrows(NullPointerException.class, () -> service.getOne(null));
+        verify(partenaireRepository, never()).findById(any());
     }
 
     @Test

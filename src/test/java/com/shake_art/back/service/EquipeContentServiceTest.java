@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class EquipeContentServiceTest {
@@ -112,5 +113,87 @@ class EquipeContentServiceTest {
         List<EquipeModel> members = service.getMembers();
 
         assertEquals(2, members.size());
+    }
+
+    @Test
+    void saveOrUpdate_forceIdSingleton() {
+        EquipeContent content = new EquipeContent();
+        content.setId(99L);
+        when(contentRepository.save(any(EquipeContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EquipeContent saved = service.saveOrUpdate(content);
+
+        assertEquals(1L, saved.getId());
+    }
+
+    @Test
+    void uploadBannerImage_sauvegardeNomFichier() throws IOException {
+        EquipeContent content = new EquipeContent();
+        content.setId(1L);
+        when(contentRepository.findById(1L)).thenReturn(Optional.of(content));
+        when(contentRepository.save(any(EquipeContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MockMultipartFile file = new MockMultipartFile("file", "banner.jpg", "image/jpeg", "abc".getBytes());
+
+        String url = service.uploadBannerImage(file);
+
+        assertEquals(true, url.startsWith("/api/equipe/images/banner/"));
+        String filename = url.substring(url.lastIndexOf('/') + 1);
+        Files.deleteIfExists(Path.of("uploads/equipe/banners", filename));
+    }
+
+    @Test
+    void deleteBannerImage_effaceValeurSiPresente() throws IOException {
+        EquipeContent content = new EquipeContent();
+        content.setId(1L);
+        content.setBannerImageUrl("missing.jpg");
+        when(contentRepository.findById(1L)).thenReturn(Optional.of(content));
+
+        service.deleteBannerImage();
+
+        assertEquals(null, content.getBannerImageUrl());
+        verify(contentRepository).save(content);
+    }
+
+    @Test
+    void updateMember_persisteSiExistant() {
+        EquipeModel member = new EquipeModel();
+        member.setId(3L);
+        member.setFullName("Camille");
+        when(memberRepository.existsById(3L)).thenReturn(true);
+        when(memberRepository.save(any(EquipeModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EquipeModel saved = service.updateMember(member);
+
+        assertEquals("Camille", saved.getFullName());
+    }
+
+    @Test
+    void deleteMember_supprimeSansPhoto() {
+        EquipeModel member = new EquipeModel();
+        member.setId(12L);
+        member.setPhotoUrl(null);
+        when(memberRepository.findById(12L)).thenReturn(Optional.of(member));
+
+        service.deleteMember(12L);
+
+        verify(memberRepository).deleteById(12L);
+        verify(memberRepository, never()).save(any(EquipeModel.class));
+    }
+
+    @Test
+    void equipeMapper_convertitDansLesDeuxSens() {
+        EquipeContent content = new EquipeContent();
+        content.setId(7L);
+        content.setPresentationText("Texte");
+        content.setBannerImageUrl("banner.jpg");
+
+        EquipeModel model = EquipeContentService.EquipeMapper.toEquipeModel(content);
+        assertEquals(7L, model.getId());
+        assertEquals("Texte", model.getFullName());
+
+        EquipeContent back = EquipeContentService.EquipeMapper.toEquipeContent(model);
+        assertEquals(7L, back.getId());
+        assertEquals("Texte", back.getPresentationText());
     }
 }

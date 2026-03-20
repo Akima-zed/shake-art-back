@@ -169,6 +169,32 @@ class ArtisteServiceTest {
     }
 
     @Test
+    void getAllArtistes_etGetGalleryPhotos_relayentRepositories() {
+        when(artisteRepository.findAll()).thenReturn(List.of(new ArtisteModel(), new ArtisteModel()));
+        when(photoRepository.findByArtisteId(4L)).thenReturn(List.of(new Photo()));
+
+        assertEquals(2, service.getAllArtistes().size());
+        assertEquals(1, service.getGalleryPhotos(4L).size());
+    }
+
+    @Test
+    void getPhotoProfilContentType_retourneTypeSiFichierExistant() throws IOException {
+        ArtisteModel artiste = new ArtisteModel();
+        artiste.setId(13L);
+        artiste.setPhotoProfil("photos/profil/content-type-test.png");
+        when(artisteRepository.findById(13L)).thenReturn(Optional.of(artiste));
+
+        Path file = Path.of("uploads", "photos/profil/content-type-test.png");
+        Files.createDirectories(file.getParent());
+        Files.write(file, "abc".getBytes());
+
+        String contentType = service.getPhotoProfilContentType(13L);
+
+        assertNotNull(contentType);
+        Files.deleteIfExists(file);
+    }
+
+    @Test
     void saveArtiste_etSave_persistentViaRepository() {
         ArtisteModel model = new ArtisteModel();
         when(artisteRepository.save(any(ArtisteModel.class))).thenReturn(model);
