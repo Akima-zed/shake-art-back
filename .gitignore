@@ -26,6 +26,10 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+### VS Code ###
+.vscode/
+*.code-workspace
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -33,5 +37,10 @@ out/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
+### Application Data ###
+uploads/
+!uploads/.gitkeep
+
+### OS ###
+.DS_Store
+Thumbs.db
