@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.11'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.shake-art'
@@ -51,4 +52,71 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy(tasks.named('jacocoTestReport'))
+}
+
+jacoco {
+	toolVersion = '0.8.12'
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn(tasks.named('test'))
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
+
+	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
+		exclude '**/config/**'
+		exclude '**/security/**'
+		exclude '**/dto/**'
+		exclude '**/model/**'
+		exclude '**/mapper/**'
+		exclude '**/exception/**'
+		exclude '**/*Application*'
+	}
+
+	classDirectories.setFrom(filtered)
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+	dependsOn(tasks.named('jacocoTestReport'))
+
+	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
+		exclude '**/config/**'
+		exclude '**/security/**'
+		exclude '**/dto/**'
+		exclude '**/model/**'
+		exclude '**/mapper/**'
+		exclude '**/exception/**'
+		exclude '**/*Application*'
+	}
+
+	classDirectories.setFrom(filtered)
+
+	violationRules {
+		rule {
+			element = 'BUNDLE'
+			limit {
+				counter = 'INSTRUCTION'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+
+		rule {
+			element = 'PACKAGE'
+			includes = ['com.shake_art.back.service']
+			limit {
+				counter = 'INSTRUCTION'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn(tasks.named('jacocoTestCoverageVerification'))
 }
