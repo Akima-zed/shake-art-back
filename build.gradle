@@ -67,33 +67,21 @@ tasks.named('jacocoTestReport') {
 		csv.required = false
 	}
 
-	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
-		include '**/service/AdminService.class'
-		include '**/service/AuthService.class'
-		include '**/service/EmailService.class'
-		include '**/service/EquipeService.class'
-		include '**/service/IntervenantService.class'
-		include '**/service/ProgrammationService.class'
-		include '**/service/ReservationService.class'
+	def allMainClasses = fileTree(layout.buildDirectory.dir('classes/java/main')) {
+		exclude '**/BackApplication.class'
 	}
 
-	classDirectories.setFrom(filtered)
+	classDirectories.setFrom(allMainClasses)
 }
 
 tasks.named('jacocoTestCoverageVerification') {
 	dependsOn(tasks.named('jacocoTestReport'))
 
-	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
-		include '**/service/AdminService.class'
-		include '**/service/AuthService.class'
-		include '**/service/EmailService.class'
-		include '**/service/EquipeService.class'
-		include '**/service/IntervenantService.class'
-		include '**/service/ProgrammationService.class'
-		include '**/service/ReservationService.class'
+	def allMainClasses = fileTree(layout.buildDirectory.dir('classes/java/main')) {
+		exclude '**/BackApplication.class'
 	}
 
-	classDirectories.setFrom(filtered)
+	classDirectories.setFrom(allMainClasses)
 
 	violationRules {
 		rule {
