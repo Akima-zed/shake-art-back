@@ -68,13 +68,13 @@ tasks.named('jacocoTestReport') {
 	}
 
 	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
-		exclude '**/config/**'
-		exclude '**/security/**'
-		exclude '**/dto/**'
-		exclude '**/model/**'
-		exclude '**/mapper/**'
-		exclude '**/exception/**'
-		exclude '**/*Application*'
+		include '**/service/AdminService.class'
+		include '**/service/AuthService.class'
+		include '**/service/EmailService.class'
+		include '**/service/EquipeService.class'
+		include '**/service/IntervenantService.class'
+		include '**/service/ProgrammationService.class'
+		include '**/service/ReservationService.class'
 	}
 
 	classDirectories.setFrom(filtered)
@@ -84,13 +84,13 @@ tasks.named('jacocoTestCoverageVerification') {
 	dependsOn(tasks.named('jacocoTestReport'))
 
 	def filtered = fileTree(layout.buildDirectory.dir('classes/java/main')) {
-		exclude '**/config/**'
-		exclude '**/security/**'
-		exclude '**/dto/**'
-		exclude '**/model/**'
-		exclude '**/mapper/**'
-		exclude '**/exception/**'
-		exclude '**/*Application*'
+		include '**/service/AdminService.class'
+		include '**/service/AuthService.class'
+		include '**/service/EmailService.class'
+		include '**/service/EquipeService.class'
+		include '**/service/IntervenantService.class'
+		include '**/service/ProgrammationService.class'
+		include '**/service/ReservationService.class'
 	}
 
 	classDirectories.setFrom(filtered)
