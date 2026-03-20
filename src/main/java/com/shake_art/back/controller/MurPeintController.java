@@ -24,7 +24,6 @@ import org.springframework.lang.NonNull;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -70,8 +69,10 @@ public class MurPeintController {
             .orElseThrow(() -> new ResourceNotFoundException("Mur peint introuvable avec l'id " + id));
         return ResponseEntity.ok(toDto(mur));
     }
+
     @Operation(summary = "Creer un mur peint",
-        description = "Ajoute un nouveau mur peint avec ses coordonnees GPS et l'artiste associe. Necessite ROLE_ADMIN.")    // 📌 POST: Création d’un mur peint
+        description = "Ajoute un nouveau mur peint avec ses coordonnees GPS et l'artiste associe. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "201", description = "Mur peint cree")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MurPeintDto> create(@RequestBody MurPeint mur) {
@@ -86,7 +87,7 @@ public class MurPeintController {
             mur.setArtiste(null);
         }
         MurPeint saved = murPeintRepository.save(mur);
-        return ResponseEntity.ok(toDto(saved));
+        return ResponseEntity.status(201).body(toDto(saved));
     }
 
     @Operation(summary = "Mettre a jour un mur peint",
@@ -123,6 +124,7 @@ public class MurPeintController {
     @Operation(summary = "Supprimer un mur peint",
         description = "Supprime un mur peint de la carte. Necessite ROLE_ADMIN.")
     // 📌 DELETE: Suppression d’un mur peint
+    @ApiResponse(responseCode = "204", description = "Mur peint supprime")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
@@ -134,13 +136,14 @@ public class MurPeintController {
         return ResponseEntity.noContent().build();
     }
 
-    // 📌 GET: Test API
+    @Operation(summary = "Verifier la disponibilite de l'API murs", description = "Endpoint technique simple pour verifier que l'API des murs peints repond. Acces public.")
     @GetMapping("/test")
     public String test() {
         return "API murs OK";
     }
+
     @Operation(summary = "Uploader une photo de fresque",
-        description = "Upload un fichier image pour un mur peint. Retourne l'URL publique du fichier sauvegarde. Necessite ROLE_ADMIN.")    // 📌 POST: Upload manuel d’une photo de fresque
+        description = "Upload un fichier image pour un mur peint. Retourne l'URL publique du fichier sauvegarde. Necessite ROLE_ADMIN.")
     @PostMapping("/upload-photo")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UploadResponse> uploadPhoto(@RequestParam("file") MultipartFile file) {
@@ -175,7 +178,6 @@ public class MurPeintController {
 
     @Operation(summary = "Valider une photo depuis la galerie",
         description = "Copie une photo depuis la galerie vers le dossier des fresques pour publication. Necessite ROLE_ADMIN.")
-    // POST: Copier une photo depuis la galerie vers le dossier des fresques
     @PostMapping("/{id}/valider-photo")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> validerPhotoDepuisGalerie(@PathVariable @NonNull Long id,
@@ -198,7 +200,6 @@ public class MurPeintController {
         }
     }
 
-    // 📌 DTO Upload (réponse après upload)
     public static class UploadResponse {
         private String filename;
 
@@ -215,7 +216,6 @@ public class MurPeintController {
         }
     }
 
-    // 📌 Conversion Entity vers DTO
     private MurPeintDto toDto(MurPeint mur) {
         MurPeintDto dto = new MurPeintDto();
         dto.setId(mur.getId());

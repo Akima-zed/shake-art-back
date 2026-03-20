@@ -9,6 +9,7 @@ import com.shake_art.back.repository.CardPresentationRepository;
 import com.shake_art.back.service.AccueilContentService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -165,6 +166,7 @@ public class AccueilContentController {
     }
 
     @Operation(summary = "Créer une nouvelle carte", description = "Cree une nouvelle carte de presentation sur la page d'accueil. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "201", description = "Carte creee")
     @PostMapping("/cards")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CardPresentation> createCard(@RequestBody CardPresentation card) {

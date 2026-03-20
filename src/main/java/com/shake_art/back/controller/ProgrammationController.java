@@ -85,14 +85,26 @@ public class ProgrammationController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/annee/{annee}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public List<ProgrammationModel> getByAnnee(@PathVariable @NonNull Integer annee) {
-        return service.getByAnnee(annee);
+    public List<ProgrammationDto> getByAnnee(@PathVariable @NonNull Integer annee) {
+        return service.getByAnnee(annee).stream()
+                .map(prog -> {
+                    ProgrammationDto dto = new ProgrammationDto();
+                    dto.setId(prog.getId());
+                    dto.setDate(prog.getDate());
+                    dto.setAnnee(prog.getAnnee());
+                    dto.setActivites(prog.getActivites().stream()
+                            .filter(a -> Objects.nonNull(a) && Objects.nonNull(a.getId()))
+                            .map(this::modelToDtoActivite)
+                            .collect(Collectors.toList()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Operation(summary = "Creer une programmation",
         description = "Cree un nouveau jour de programmation avec ses activites. Necessite ROLE_ADMIN.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Programmation creee"),
+        @ApiResponse(responseCode = "201", description = "Programmation creee"),
         @ApiResponse(responseCode = "400", description = "Donnees invalides"),
         @ApiResponse(responseCode = "401", description = "Token JWT manquant ou invalide"),
         @ApiResponse(responseCode = "403", description = "Role ADMIN requis")
@@ -101,11 +113,20 @@ public class ProgrammationController {
     @PostMapping(consumes = "application/json", produces = "application/json")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<ProgrammationModel> create(@Valid @RequestBody ProgrammationDto dto) {
+    public ResponseEntity<ProgrammationDto> create(@Valid @RequestBody ProgrammationDto dto) {
         ProgrammationModel model = dtoToModel(dto);
         model = Objects.requireNonNull(model, "Le modèle de programmation ne peut pas être nul");
         ProgrammationModel saved = service.save(model);
-        return ResponseEntity.ok(saved);
+        // Convertir le modele sauvegarde en DTO pour le retour
+        ProgrammationDto returnDto = new ProgrammationDto();
+        returnDto.setId(saved.getId());
+        returnDto.setDate(saved.getDate());
+        returnDto.setAnnee(saved.getAnnee());
+        returnDto.setActivites(saved.getActivites().stream()
+                .filter(a -> Objects.nonNull(a) && Objects.nonNull(a.getId()))
+                .map(this::modelToDtoActivite)
+                .collect(Collectors.toList()));
+        return ResponseEntity.status(201).body(returnDto);
     }
 
     @Operation(summary = "Mettre a jour une programmation",
@@ -114,7 +135,7 @@ public class ProgrammationController {
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<ProgrammationModel> update(@PathVariable @NonNull Long id,
+    public ResponseEntity<ProgrammationDto> update(@PathVariable @NonNull Long id,
             @Valid @RequestBody ProgrammationDto dto) {
         Objects.requireNonNull(id, "ID cannot be null");
         ProgrammationModel existing = service.getById(id);
@@ -129,11 +150,21 @@ public class ProgrammationController {
                         .map(this::dtoToModelActivite)
                         .collect(Collectors.toList()));
         ProgrammationModel updated = service.save(existing);
-        return ResponseEntity.ok(updated);
+        // Convertir le modele update en DTO pour le retour
+        ProgrammationDto returnDto = new ProgrammationDto();
+        returnDto.setId(updated.getId());
+        returnDto.setDate(updated.getDate());
+        returnDto.setAnnee(updated.getAnnee());
+        returnDto.setActivites(updated.getActivites().stream()
+                .filter(a -> Objects.nonNull(a) && Objects.nonNull(a.getId()))
+                .map(this::modelToDtoActivite)
+                .collect(Collectors.toList()));
+        return ResponseEntity.ok(returnDto);
     }
 
     @Operation(summary = "Supprimer une activite d'une programmation",
         description = "Retire une activite d'un jour de programmation. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Activite retiree de la programmation")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{programmationId}/activites/{activiteId}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -155,13 +186,14 @@ public class ProgrammationController {
 
     @Operation(summary = "Supprimer une programmation par date",
         description = "Supprime tous les jours de programmation correspondant a une date. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Programmations supprimees")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/date/{date}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<?> deleteByDate(@PathVariable String date) {
+    public ResponseEntity<Void> deleteByDate(@PathVariable String date) {
         service.deleteByDate(date);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Creer une activite independante",

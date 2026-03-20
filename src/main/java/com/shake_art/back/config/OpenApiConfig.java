@@ -21,10 +21,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.method.HandlerMethod;
 
@@ -150,16 +148,21 @@ public class OpenApiConfig {
             return;
         }
 
-        // Description du 200 adaptee au verbe HTTP
-        String desc200;
-        if (method.getAnnotation(GetMapping.class) != null) {
-            desc200 = "Donnees recuperees avec succes";
-        } else if (method.getAnnotation(PutMapping.class) != null || method.getAnnotation(PatchMapping.class) != null) {
-            desc200 = "Ressource mise a jour avec succes";
-        } else {
-            desc200 = "Requete traitee avec succes";
+        // N'injecter le 200 que si:
+        // - C'est un GET/PUT/PATCH (car ces verbes retournent habituellement 200 avec un body)
+        // - ET aucun code de reponse alternatif (201, 204) n'est deja documente
+        boolean hasExplicitResponseCode = responses.containsKey("201") || responses.containsKey("204");
+        if (!hasExplicitResponseCode) {
+            String desc200;
+            if (method.getAnnotation(GetMapping.class) != null) {
+                desc200 = "Donnees recuperees avec succes";
+            } else if (method.getAnnotation(PutMapping.class) != null || method.getAnnotation(PatchMapping.class) != null) {
+                desc200 = "Ressource mise a jour avec succes";
+            } else {
+                desc200 = "Requete traitee avec succes";
+            }
+            responses.computeIfAbsent("200", code -> new ApiResponse().description(desc200));
         }
-        responses.computeIfAbsent("200", code -> new ApiResponse().description(desc200));
 
         responses.computeIfAbsent("400", code -> new ApiResponse().description("Requete invalide (erreur de validation ou format)"));
         responses.computeIfAbsent("404", code -> new ApiResponse().description("Ressource non trouvee"));
@@ -168,13 +171,6 @@ public class OpenApiConfig {
         if (protectedEndpoint) {
             responses.computeIfAbsent("401", code -> new ApiResponse().description("Authentification requise (token JWT manquant ou invalide)"));
             responses.computeIfAbsent("403", code -> new ApiResponse().description("Acces refuse (role insuffisant)"));
-        }
-
-        if (method.getAnnotation(PostMapping.class) != null) {
-            responses.computeIfAbsent("201", code -> new ApiResponse().description("Ressource creee"));
-        }
-        if (method.getAnnotation(DeleteMapping.class) != null) {
-            responses.computeIfAbsent("204", code -> new ApiResponse().description("Ressource supprimee"));
         }
     }
 }

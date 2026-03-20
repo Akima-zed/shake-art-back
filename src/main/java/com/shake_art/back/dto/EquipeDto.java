@@ -1,5 +1,8 @@
 package com.shake_art.back.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(name = "Equipe", description = "Membre de l'equipe du festival")
 public class EquipeDto {
     private Long id;
     private String nom;

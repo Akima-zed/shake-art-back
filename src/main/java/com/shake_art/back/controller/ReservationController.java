@@ -34,7 +34,7 @@ public class ReservationController {
     @Operation(summary = "Soumettre une reservation",
         description = "Cree une reservation pour une activite du festival et envoie un email de confirmation au visiteur. Acces public.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Reservation enregistree, email de confirmation envoye"),
+        @ApiResponse(responseCode = "201", description = "Reservation enregistree, email de confirmation envoye"),
         @ApiResponse(responseCode = "400", description = "Donnees de reservation invalides")
     })
     @PostMapping
@@ -42,7 +42,7 @@ public class ReservationController {
         Objects.requireNonNull(reservation, "La réservation ne peut pas être nulle");
         ReservationModel saved = service.save(reservation);
         emailService.envoyerConfirmation(saved);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.status(201).body(saved);
     }
 
     @Operation(summary = "Lister toutes les reservations",
@@ -69,11 +69,13 @@ public class ReservationController {
 
     @Operation(summary = "Supprimer une reservation",
         description = "Supprime definitivement une reservation. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Reservation supprimee")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void supprimer(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> supprimer(@PathVariable @NonNull Long id) {
         service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Suspendre ou reactiver une reservation",

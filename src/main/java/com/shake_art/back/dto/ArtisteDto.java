@@ -1,7 +1,9 @@
 package com.shake_art.back.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
+@Schema(name = "Artiste", description = "Informations publiques d'un artiste expose au festival")
 public class ArtisteDto {
     private Long id;
     private String name;

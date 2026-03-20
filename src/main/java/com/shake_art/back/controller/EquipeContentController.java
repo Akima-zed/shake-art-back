@@ -1,9 +1,12 @@
 package com.shake_art.back.controller;
 
+import com.shake_art.back.dto.EquipeContentDto;
 import com.shake_art.back.exception.BusinessException;
 import com.shake_art.back.exception.ResourceNotFoundException;
 import com.shake_art.back.exception.TechnicalException;
+import com.shake_art.back.mapper.EquipeContentMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -53,36 +56,41 @@ public class EquipeContentController {
     // ----------- Contenu principal Équipe -----------
 
     /** Récupère le contenu principal équipe (texte + url bannière) */
+    @Operation(summary = "Recuperer le contenu equipe", description = "Retourne le contenu principal de la page equipe avec son texte et l'URL de banniere. Acces public.")
     @GetMapping(value = "/content", produces = "application/json")
-    public ResponseEntity<EquipeContent> getContent() {
+    public ResponseEntity<EquipeContentDto> getContent() {
         EquipeContent content = service.getContent()
             .orElseThrow(() -> new ResourceNotFoundException("Contenu equipe introuvable"));
-        return ResponseEntity.ok(content);
+        return ResponseEntity.ok(EquipeContentMapper.toDto(content));
     }
 
     /** Crée un nouveau contenu principal équipe */
     @Operation(summary = "Creer le contenu equipe", description = "Cree le contenu principal de la page equipe. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "201", description = "Contenu equipe cree")
     @PostMapping("/content")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EquipeContent> createContent(@RequestBody EquipeContent content) {
+    public ResponseEntity<EquipeContentDto> createContent(@RequestBody EquipeContentDto contentDto) {
+        EquipeContent content = EquipeContentMapper.toModel(contentDto);
         EquipeContent saved = service.saveOrUpdate(content);
-        return ResponseEntity.status(201).body(saved);
+        return ResponseEntity.status(201).body(EquipeContentMapper.toDto(saved));
     }
 
     /** Met à jour un contenu principal équipe existant */
     @Operation(summary = "Mettre a jour le contenu equipe", description = "Met a jour le contenu principal de la page equipe. Necessite ROLE_ADMIN.")
     @PutMapping("/content")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateContent(@RequestBody EquipeContent content) {
-        if (content.getId() == null) {
+    public ResponseEntity<EquipeContentDto> updateContent(@RequestBody EquipeContentDto contentDto) {
+        if (contentDto.getId() == null) {
             throw new BusinessException("L'id du contenu est obligatoire pour la mise a jour");
         }
+        EquipeContent content = EquipeContentMapper.toModel(contentDto);
         EquipeContent updated = service.saveOrUpdate(content);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(EquipeContentMapper.toDto(updated));
     }
 
     /** Supprime un contenu principal par son ID */
     @Operation(summary = "Supprimer le contenu equipe", description = "Supprime le contenu principal par son identifiant. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Contenu equipe supprime")
     @DeleteMapping("/content/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
@@ -120,19 +128,21 @@ public class EquipeContentController {
      */
     @DeleteMapping("/content/delete-banner")
     @Operation(summary = "Supprimer la banniere equipe", description = "Supprime l'image de banniere actuelle de la page equipe. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Banniere supprimee")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteBanner() {
+    public ResponseEntity<Void> deleteBanner() {
         try {
             service.deleteBannerImage();
         } catch (IOException e) {
             throw new TechnicalException("Erreur lors de la suppression de la banniere", e);
         }
-        return ResponseEntity.ok("Bannière supprimée avec succès");
+        return ResponseEntity.noContent().build();
     }
 
     // ----------- Gestion des membres -----------
 
     /** Récupère la liste complète des membres de l'équipe */
+    @Operation(summary = "Lister les membres", description = "Retourne la liste complete des membres de l'equipe. Acces public.")
     @GetMapping(value = "/members", produces = "application/json")
     public ResponseEntity<List<EquipeModel>> getMembers() {
         List<EquipeModel> members = service.getMembers();
@@ -141,6 +151,7 @@ public class EquipeContentController {
 
     /** Ajoute un nouveau membre */
     @Operation(summary = "Ajouter un membre", description = "Ajoute un membre a l'equipe. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "201", description = "Membre cree")
     @PostMapping("/members")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EquipeModel> addMember(@RequestBody @NonNull EquipeModel member) {
@@ -165,6 +176,7 @@ public class EquipeContentController {
 
     /** Supprime un membre par son ID */
     @Operation(summary = "Supprimer un membre", description = "Supprime un membre de l'equipe. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Membre supprime")
     @DeleteMapping("/members/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMember(@PathVariable @NonNull Long id) {
@@ -203,15 +215,16 @@ public class EquipeContentController {
      */
     @DeleteMapping("/members/{id}/delete-photo")
     @Operation(summary = "Supprimer la photo d'un membre", description = "Supprime la photo associee a un membre. Necessite ROLE_ADMIN.")
+    @ApiResponse(responseCode = "204", description = "Photo du membre supprimee")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteMemberPhoto(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteMemberPhoto(@PathVariable @NonNull Long id) {
         Objects.requireNonNull(id, "ID cannot be null");
         try {
             service.deleteMemberPhoto(id);
         } catch (IOException e) {
             throw new TechnicalException("Erreur lors de la suppression de la photo du membre", e);
         }
-        return ResponseEntity.ok("Photo du membre supprimée avec succès");
+        return ResponseEntity.noContent().build();
     }
 
     // ----------- Endpoints pour servir les images (bannière et photos membres)
@@ -221,6 +234,7 @@ public class EquipeContentController {
      * Sert une image bannière à partir du nom de fichier.
      * Exemple URL : GET /api/equipe/images/banner/nomFichier.jpg
      */
+    @Operation(summary = "Lire une image de banniere", description = "Sert une image de banniere equipe par son nom de fichier. Acces public.")
     @GetMapping("/images/banner/{filename:.+}")
     public ResponseEntity<Resource> getBannerImage(@PathVariable @NonNull String filename) {
         return serveImageFile(bannersDir, filename);
@@ -230,6 +244,7 @@ public class EquipeContentController {
      * Sert une photo de membre à partir du nom de fichier.
      * Exemple URL : GET /api/equipe/images/members/nomFichier.jpg
      */
+    @Operation(summary = "Lire une photo de membre", description = "Sert la photo d'un membre de l'equipe par son nom de fichier. Acces public.")
     @GetMapping("/images/members/{filename:.+}")
     public ResponseEntity<Resource> getMemberPhoto(@PathVariable @NonNull String filename) {
         return serveImageFile(membersDir, filename);

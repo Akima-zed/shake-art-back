@@ -10,7 +10,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,5 +46,15 @@ class SecurityErrorResponseIntegrationTest {
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"))
                 .andExpect(jsonPath("$.message").value("Acces refuse"))
                 .andExpect(jsonPath("$.path").value("/admin/reservation-email"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminAvecRoleAdmin_retourne200_etEmail() throws Exception {
+        given(adminService.getReservationEmail()).willReturn("admin@shake-art.fr");
+
+        mockMvc.perform(get("/admin/reservation-email"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("admin@shake-art.fr"));
     }
 }

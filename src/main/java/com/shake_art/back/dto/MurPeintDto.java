@@ -1,8 +1,10 @@
 package com.shake_art.back.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(name = "MurPeint", description = "Mur peint avec localisation GPS et artiste")
 public class MurPeintDto {
     private Long id;
     private String nom;
