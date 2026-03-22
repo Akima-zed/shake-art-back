@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.5.11'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'jacoco'
+	id 'org.owasp.dependencycheck' version '12.1.0'
 }
 
 group = 'com.shake-art'
@@ -59,6 +60,21 @@ jacoco {
 	toolVersion = '0.8.12'
 }
 
+dependencyCheck {
+	formats = ['HTML', 'JSON']
+	failBuildOnCVSS = 9.0
+	analyzers {
+		ossIndex {
+			enabled = false
+		}
+	}
+	if (System.getenv('NVD_API_KEY')) {
+		nvd {
+			apiKey = System.getenv('NVD_API_KEY')
+		}
+	}
+}
+
 tasks.named('jacocoTestReport') {
 	dependsOn(tasks.named('test'))
 	reports {
@@ -107,4 +123,5 @@ tasks.named('jacocoTestCoverageVerification') {
 
 tasks.named('check') {
 	dependsOn(tasks.named('jacocoTestCoverageVerification'))
+	dependsOn(tasks.named('dependencyCheckAnalyze'))
 }

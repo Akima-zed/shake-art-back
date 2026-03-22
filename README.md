@@ -170,6 +170,74 @@ Il valide explicitement les 3 cas suivants sur une route admin (`/admin/reservat
 - avec `ROLE_USER` -> `403 Forbidden`
 - avec `ROLE_ADMIN` -> `200 OK`
 
+## Couverture de code (JaCoCo)
+
+Generation du rapport:
+
+```powershell
+.\gradlew.bat clean check
+```
+
+Rapport HTML genere dans:
+
+- `build/reports/jacoco/test/html/index.html`
+
+Seuils verifies automatiquement:
+
+- Couverture globale >= `80%`
+- Couche service >= `80%`
+
+Note sur la colonne `Missed Branches`:
+
+- `n/a` signifie qu'il n'y a pas de branche mesurable dans la classe/methode (pas de `if/else`, `switch`, ternaire, etc.).
+- Ce n'est pas une erreur de couverture.
+
+## Scan des vulnérabilités (OWASP Dependency-Check)
+
+Detection automatique des vulnerabilites dans les dependances Maven.
+
+Generation du rapport en local:
+
+```powershell
+.\gradlew.bat dependencyCheckAnalyze
+```
+
+Rapports generes dans:
+
+- `build/reports/dependency-check-report.html` (rapport interactif)
+- `build/reports/dependency-check-report.json` (donnees brutes)
+
+Seuil critique configure:
+
+- Le build echoue si une dependance presente un CVE avec un score CVSS >= `9.0`
+- Les CVE de score inferieur sont reportees dans le rapport sans bloquer le build
+
+Derniers resultats (20/03/2026):
+
+- 8 vulnerabilites detectees, score CVSS maximum : **7.5**
+- Aucune vulnerabilite critique (CVSS >= 9.0) — build non bloque
+
+Dependances concernees:
+
+- `angus-activation 2.0.3` — CVE-2025-7962
+- `commons-lang3 3.17.0` — CVE-2025-48924
+- `hibernate-validator 8.0.3` — CVE-2025-15104
+- `log4j-api 2.24.3` — CVE-2025-68161
+- `swagger-ui 5.31.0` (DOMPurify 3.2.6) — CVE-2025-15599, CVE-2026-0540
+
+Intégration CI (GitHub Actions):
+
+- Scan automatique a chaque push, pull request et chaque lundi a 4h
+- Workflow: `.github/workflows/security-dependency-scan.yml`
+- Tests et coverage executes dans une premiere etape (memoire standard)
+- Scan OWASP execute dans une etape dediee avec 2 Go de heap alloues via `GRADLE_OPTS`
+- Rapports HTML et JSON uploades comme artefacts de build (meme en cas d'echec)
+
+Configuration memoire:
+
+- Taches standard (compilation, tests, JaCoCo) : `Xmx1024m` (defini dans `gradle.properties`)
+- Scan OWASP uniquement : `Xmx2048m` (surcharge via `GRADLE_OPTS` dans le step CI dedie)
+
 ## Notes de projet
 
 - Le package Java utilise `com.shake_art.back` (underscore), car `com.shake-art.back` n'est pas valide.
