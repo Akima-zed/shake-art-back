@@ -227,16 +227,22 @@ Dependances concernees:
 
 Intégration CI (GitHub Actions):
 
-- Scan automatique a chaque push, pull request et chaque lundi a 4h
-- Workflow: `.github/workflows/security-dependency-scan.yml`
-- Tests et coverage executes dans une premiere etape (memoire standard)
-- Scan OWASP execute dans une etape dediee avec 2 Go de heap alloues via `GRADLE_OPTS`
-- Rapports HTML et JSON uploades comme artefacts de build (meme en cas d'echec)
+- Pipeline CI push / pull request: `.github/workflows/ci.yml`
+- Job `tests`: build, tests, rapport JaCoCo, verification du seuil de couverture 80 %, analyse SonarCloud si configuree
+- Job `security-scan`: scan OWASP separe, execute meme si le job `tests` echoue
+- Workflow hebdomadaire de securite: `.github/workflows/security-dependency-scan.yml`
+- Rapport OWASP HTML / JSON uploade comme artefact de build (meme en cas d'echec)
 
 Configuration memoire:
 
 - Taches standard (compilation, tests, JaCoCo) : `Xmx1024m` (defini dans `gradle.properties`)
 - Scan OWASP uniquement : `Xmx2048m` (surcharge via `GRADLE_OPTS` dans le step CI dedie)
+
+Prerequis SonarCloud pour la CI:
+
+- Secret GitHub Actions: `SONAR_TOKEN`
+- Variables GitHub Actions: `SONAR_ORGANIZATION` et `SONAR_PROJECT_KEY`
+- Tant que ces valeurs ne sont pas configurees, le job `tests` reste vert mais l'analyse SonarCloud est ignoree avec un message explicite dans les logs
 
 ## Notes de projet
 
